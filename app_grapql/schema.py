@@ -6,12 +6,12 @@ from graphene_django.filter import DjangoFilterConnectionField
 from graphql_auth.bases import Output,MutationMixin,DynamicArgsMixin
 
 from app_grapql.models import *
-#custum
-   
+  
 #Types
 class UserType(DjangoObjectType):
     class Meta:
         model = User
+        interfaces = (relay.Node, )
              
 class PageType(DjangoObjectType):
     class Meta:
@@ -409,28 +409,28 @@ class Add_item_cart(MutationMixin, DynamicArgsMixin, add_item_CartAction, graphe
 #Query
 class Query(graphene.ObjectType):
     all_page = DjangoFilterConnectionField(PageType)
-    page = graphene.relay.Node.Field(PageType)
-    item=graphene.relay.Node.Field(ItemType)
+    page = relay.Node.Field(PageType)
+    item=relay.Node.Field(ItemType)
     all_Page_layoutType = DjangoFilterConnectionField(Page_layoutType)
-    page_layoutType = graphene.relay.Node.Field(Page_layoutType)
+    page_layoutType = relay.Node.Field(Page_layoutType)
     all_menu = DjangoFilterConnectionField(MenuType)
-    menu = graphene.relay.Node.Field(MenuType)
+    menu = relay.Node.Field(MenuType)
     all_layout=DjangoFilterConnectionField(LayoutType)
-    layout=graphene.relay.Node.Field(LayoutType)
+    layout=relay.Node.Field(LayoutType)
     all_Catergory=DjangoFilterConnectionField(CatergoryType)
-    catergory=graphene.relay.Node.Field(CatergoryType)
+    catergory=relay.Node.Field(CatergoryType)
     all_Invoice=DjangoFilterConnectionField(InvoiceType)
-    invoice=graphene.relay.Node.Field(InvoiceType)
+    invoice=relay.Node.Field(InvoiceType)
     all_Item_layoutType=DjangoFilterConnectionField(Item_layoutType)
-    item_layoutType=graphene.relay.Node.Field(Item_layoutType)
+    item_layoutType=relay.Node.Field(Item_layoutType)
     all_Invoice_item=DjangoFilterConnectionField(LayoutType)
     invoice_item=graphene.relay.Node.Field(Invoice_itemType)
     all_Group_join=DjangoFilterConnectionField(Group_joinType)
-    group_join=graphene.relay.Node.Field(Group_joinType)
+    group_join=relay.Node.Field(Group_joinType)
     all_Group_User_join=DjangoFilterConnectionField(Group_user_joinType)
-    group_user_join=graphene.relay.Node.Field(Group_user_joinType)
+    group_user_join=relay.Node.Field(Group_user_joinType)
     all_Chat=DjangoFilterConnectionField(ChatType)
-    chatType=graphene.relay.Node.Field(ChatType)
+    chatType=relay.Node.Field(ChatType)
 
     all_Item=DjangoFilterConnectionField(ItemType,order_by_fields=graphene.String())
     page_by_name = graphene.Field(PageType, name=graphene.String(required=True))
