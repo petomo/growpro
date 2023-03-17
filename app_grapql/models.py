@@ -7,11 +7,16 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.text import get_text_list
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
+#from django.core.validators import * upload file
 
 # Create your models here.
 ADDITION = 1
 CHANGE = 2
 DELETION = 3
+CANCLE=4
+SEND=5
+READ=6
+COMPLETE=7
 
 ACTION_FLAG_CHOICES = (
     (ADDITION, _("Addition")),
@@ -20,17 +25,19 @@ ACTION_FLAG_CHOICES = (
 )
 
 Status_choise=(
-    ('Create','Create'),
-    ('Cancel','Cancel'),
-    ('Accept','Accept'),
-    ('Complete','Complete'),
+    (ADDITION, _("Addition")),
+    (DELETION, _("Deletion")),
+    (CANCLE, _("Cancel")),
+    (COMPLETE, _("Complete")),
 )
 
 Status_chat=(
-    ('send','send'),
-    ('read','read'),
-    ('cancel','cancel'),
-    ('delete','delete'),
+    (ADDITION, _("Addition")),
+    (CHANGE, _("Change")),
+    (DELETION, _("Deletion")),
+    (CANCLE, _("Cancel")),
+    (SEND, _("Send")),
+    (READ, _("Read")),
 )
 
 Status_item=(
@@ -49,29 +56,29 @@ class User(AbstractUser):
         return str(self.id) +" : "+ self.first_name+" "+self.last_name   
     def addCoin(self,coinadd):
         self.coin=self.coin+int(coinadd)
-        self.save   
+        self.save()   
     def creat_Seller(selt):
         u=Seller()
         u.user=selt
-        u.save   
+        u.save()   
     def creat_Supplier(selt):
         u=Supplier()
         u.user=selt
-        u.save
+        u.save()
     def creat_Buyer(selt):
         u=Buyer()
         u.user=selt
-        u.save
+        u.save()
     def creat_Invoice_buyer(selt):
         i=Invoice()
         i.verifier=selt
-        i.status_now='create'
-        i.save
+        i.status_now=ADDITION
+        i.save()
         ih=Invoice_history()
         ih.user=selt
         ih.invoice=i
         ih.status=i.status_now
-        ih.save
+        ih.save()
         return i
    
 class Seller(models.Model):
@@ -248,23 +255,23 @@ class Invoice(models.Model):
         return str(self.id)+" : "+self.status_now 
     def update_buyer(selt,u):
         selt.buyer=u
-        selt.save
+        selt.save()
     def update_verifier(selt,u):
         selt.verifier=u
-        selt.save
+        selt.save()
     def update_cause(selt,s):
         selt.cause=s
-        selt.save
+        selt.save()
     def update_status_now(selt,status):
         selt.status_now=status
-        selt.save
+        selt.save()
     def creat_Invoice_item(self,_item,_number,_price):
         ii=Invoice_item()
         ii.invoice=self
         ii.item=_item
         ii.number=_number
         ii.total_price=_price
-        ii.save
+        ii.save()
 
 class Invoice_history(models.Model):
     user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=False)
@@ -289,16 +296,21 @@ class Group_join(models.Model):
     dest=models.CharField(max_length=200,blank=True,null=True)
     def __str__(self) -> str:
         return str(self.id)+" : "+self.name
+    
+    def updateName(self,name):
+        self.name=self.name+name
+        self.save       
 
 class Chat(models.Model):
     user=models.ForeignKey(User,models.CASCADE,null=False,blank=False)
     dest=models.CharField(max_length=250,blank=True,null=True)
     groups=models.ForeignKey(Group_join,models.CASCADE,null=False,blank=False)
     time=models.DateTimeField(auto_now_add=True)
-    stastus=models.CharField(choices=Status_chat,max_length=50,null=False,blank=False,default='create')
+    stastus=models.CharField(choices=Status_chat,max_length=50,null=False,blank=False,default='create') 
 
     def __str__(self) -> str:
         return str(self.id)+" : "+self.user.get_full_name()+" : "+str(self.groups) +" : "+ str(self.time) +" : "+ self.stastus
+    
 
 class Group_user_join(models.Model):
     user=models.ForeignKey(User,models.CASCADE,null=False,blank=False)
@@ -307,6 +319,8 @@ class Group_user_join(models.Model):
     last_chat=models.ForeignKey(Chat,models.SET_NULL,null=True,blank=True)
     def __str__(self) -> str:
         return str(self.id)+" : "+self.user.get_full_name()+" : "+str(self.group_join)
+    
+    
 
 
 class HistoryView(models.Model):

@@ -114,7 +114,8 @@ DATABASES = {
         'NAME': 'database_gro',
         'USER':'root',
         'PASSWORD':'',
-        'HOST':''
+        'HOST':'',
+        'OPTIONS': {'init_command': "SET sql_mode='STRICT_TRANS_TABLES'"},
     }
 }
 
