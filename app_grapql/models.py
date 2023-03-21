@@ -40,6 +40,11 @@ Status_chat=(
     (SEND, _("Send")),
     (READ, _("Read")),
 )
+Status_like=(
+    (0,("default")),
+    (1,("like")),
+    (2,("distlike")),
+)
 
 Status_item=(
     ('Private','Private'),
@@ -294,9 +299,17 @@ class Invoice_item(models.Model):
 class LikeItems_seller(models.Model):
     item=models.ForeignKey(Items_seller,on_delete=models.CASCADE,null=False,blank=False)
     user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
-    type=models.IntegerField(null=False,blank=False,default=0)
+    type=models.IntegerField(choices=Status_like,null=False,blank=False,default=0)
     def __str__(self) -> str:
-        return str(self.id)+" : "+str(self.user.username)+" : "+self.item.title 
+        return str(self.id)+" : "+str(self.user.username)+" : "+self.item.title
+    def like(self):
+        if self.type==1:self.type=0
+        else: self.type=1
+        self.save()
+    def distlike(self):
+        if self.type==2:self.type=0
+        else: self.type=2
+        self.save()  
 
 class Group_join(models.Model):
     name=models.CharField(max_length=200,blank=False,null=False)
