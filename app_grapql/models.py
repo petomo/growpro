@@ -7,7 +7,8 @@ from django.contrib.contenttypes.models import ContentType
 from django.utils.text import get_text_list
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
-#from django.core.validators import * upload file
+#from django.core.validators import *
+from django.core.exceptions import ValidationError
 
 # Create your models here.
 ADDITION = 1
@@ -24,7 +25,7 @@ ACTION_FLAG_CHOICES = (
     (DELETION, _("Deletion")),
 )
 
-Status_choise=(
+Status_invoice=(
     (ADDITION, _("Addition")),
     (DELETION, _("Deletion")),
     (CANCLE, _("Cancel")),
@@ -45,6 +46,14 @@ Status_item=(
     ('Internal','Internal'),
     ('Public','Public'),
 )
+def validate_decimals(value):
+    try:
+        return round(float(value), 2)
+    except:
+        raise ValidationError(
+            _('%(value)s is not an integer or a float  number'),
+            params={'value': value},
+        )
 
 class User(AbstractUser):
     avatar=models.ImageField(upload_to='static/upload/user/%Y/%m',null=True,blank=True)
@@ -54,34 +63,13 @@ class User(AbstractUser):
 
     def __str__(self) :
         return str(self.id) +" : "+ self.first_name+" "+self.last_name   
-    def addCoin(self,coinadd):
-        self.coin=self.coin+int(coinadd)
-        self.save()   
-    def creat_Seller(selt):
-        u=Seller()
-        u.user=selt
-        u.save()   
-    def creat_Supplier(selt):
-        u=Supplier()
-        u.user=selt
-        u.save()
-    def creat_Buyer(selt):
-        u=Buyer()
-        u.user=selt
-        u.save()
-    def creat_Invoice_buyer(selt):
-        i=Invoice()
-        i.verifier=selt
-        i.status_now=ADDITION
-        i.save()
-        ih=Invoice_history()
-        ih.user=selt
-        ih.invoice=i
-        ih.status=i.status_now
-        ih.save()
-        return i
+    
+    def like_item_seller(self,item,type):
+        like=LikeItems_seller.objects.get_or_create(user=self,item=item,type=type)
+        like.save()
    
 class Seller(models.Model):
+    title=models.CharField(max_length=250,null=True,blank=True)
     total_sales=models.IntegerField(null=False,blank=True,default=0)
     month_sales=models.IntegerField(null=False,blank=True,default=0)
     year_sales=models.IntegerField(null=False,blank=True,default=0)
@@ -89,21 +77,22 @@ class Seller(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=False)
 
     def __str__(self) :
-        return str(self.id) +" : "+ self.user+" : "+self.typeuser
+        return str(self.id) +" : "+ self.user.username+" : "+ str(self.typeuser)
     def update_month_sales(self,x):
         self.month_sales=int(x)
-        self.save
+        self.save()
     def update_year_sales(self,x):
         self.year_sales=int(x)
-        self.save
+        self.save()
     def update_total_sales(self,x):
         self.total_sales=self.total_sales +int(x)
-        self.save
+        self.save()
     def update_typeuser(self,x):
         self.total_sales=self.typeuser +int(x)
-        self.save
+        self.save()
 
 class Supplier(models.Model):
+    title=models.CharField(max_length=250,null=True,blank=True)
     total_sales=models.IntegerField(null=False,blank=True,default=0)
     month_sales=models.IntegerField(null=False,blank=True,default=0)
     year_sales=models.IntegerField(null=False,blank=True,default=0)
@@ -111,19 +100,19 @@ class Supplier(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=False)
 
     def __str__(self) :
-        return str(self.id) +" : "+ self.user+" : "+self.typeuser
+        return str(self.id) +" : "+ self.user.username+" : "+ str(self.typeuser)
     def update_month_sales(self,x):
         self.month_sales=int(x)
         self.save
     def update_year_sales(self,x):
         self.year_sales=int(x)
-        self.save
+        self.save()
     def update_total_sales(self,x):
         self.total_sales=self.total_sales +int(x)
-        self.save
+        self.save()
     def update_typeuser(self,x):
         self.total_sales=self.typeuser +int(x)
-        self.save
+        self.save()
 
 class Buyer(models.Model):
     total_spending=models.IntegerField(null=False,blank=True,default=0)
@@ -133,7 +122,7 @@ class Buyer(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=False)
 
     def __str__(self) :
-        return str(self.id) +" : "+ self.user+" : "+self.typeuser
+        return str(self.id) +" : "+ self.user.username+" : "+str(self.typeuser)
     def update_total_spending(self,x):
         self.total_spending=self.total_spending+int(x)
         self.save
@@ -146,7 +135,9 @@ class Buyer(models.Model):
     def update_typeuser(self,x):
         self.total_sales=self.typeuser +int(x)
         self.save
-
+    def getid(self):
+        return self.user.id
+    
 class Content(models.Model):
     class Meta:
         abstract=True
@@ -214,7 +205,9 @@ class Item(Content):
     dest_style=models.CharField(max_length=250,null=True,blank=True)
     supplier=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True)
     stastus=models.CharField(max_length=250,choices=Status_item,null=True,blank=True)
-
+    def __str__(self) :
+        return str(self.id) +" : "+self.title +" : "+self.supplier.username
+    
 class Items_seller(models.Model):
     item=models.ForeignKey(Item,on_delete=models.CASCADE,null=False,blank=False)
     title_i_s_stype=models.CharField(max_length=250,null=True,blank=True)
@@ -223,9 +216,11 @@ class Items_seller(models.Model):
     stastus=models.CharField(max_length=250,choices=Status_item,null=True,blank=True)
     sale_time=models.DateTimeField(null=True,blank=True)
     number=models.IntegerField(null=False,blank=False,default=0)
-    price_sell=models.FloatField(max_length=50,null=False,blank=False,default=0)
+    price_sell=models.FloatField(null=False,blank=False,default=0)
+    price_sale=models.FloatField(null=False,blank=False,default=0)
+    promotion_rate=models.FloatField(validators=[validate_decimals],null=True,blank=True,default=0)
     def __str__(self) :
-        return str(self.id) +" : "+ self.item.title+" : "+ self.number+" : "+ self.stastus
+        return str(self.id) +" : "+ self.item.title+" : "+ str(self.number)+" : "+ str(self.stastus)
 
 class Item_layout(models.Model):
     items_seller=models.ForeignKey(Items_seller,on_delete=models.SET_NULL,null=True,blank=True)
@@ -235,48 +230,53 @@ class Item_layout(models.Model):
     
 class Catergory(Content):
     parent=models.CharField(max_length=250,null=True,blank=True,default='0')
-    avatar=models.ImageField(upload_to='static/upload/Catergory/%Y/%m',null=True,blank=True)
+    avatar=models.ImageField(upload_to='static/upload/Catergory/%Y/%m',null=True,blank=True)    
 
 class Tag_catergory(models.Model):
     item=models.ForeignKey(Item,on_delete=models.SET_NULL,null=True,blank=False)
     catergory=models.ForeignKey(Catergory,on_delete=models.CASCADE,null=False,blank=False)
     def __str__(self) :
-        return str(self.id) +" : "+ self.item+" : "+ self.catergory
+        return str(self.id) +" : "+ str(self.item.id) +" : "+ str(self.catergory.title)
 
 class Invoice(models.Model):
     verifier=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=False)
     created_time=models.DateTimeField(auto_now_add=True)
     approval_date=models.DateTimeField(auto_now=True)
     cause=models.CharField(max_length=255,null=True,blank=True)
-    status_now=models.CharField(choices=Status_choise,max_length=50,null=False,blank=False,default='create')
+    status_now=models.IntegerField(choices=Status_invoice,null=False,blank=False,default=1)
     buyer=models.ForeignKey(Buyer,on_delete=models.SET_NULL,null=True,blank=True)
 
     def __str__(self) -> str:
-        return str(self.id)+" : "+self.status_now 
-    def update_buyer(selt,u):
-        selt.buyer=u
-        selt.save()
-    def update_verifier(selt,u):
-        selt.verifier=u
-        selt.save()
-    def update_cause(selt,s):
-        selt.cause=s
-        selt.save()
-    def update_status_now(selt,status):
-        selt.status_now=status
-        selt.save()
-    def creat_Invoice_item(self,_item,_number,_price):
-        ii=Invoice_item()
-        ii.invoice=self
-        ii.item=_item
-        ii.number=_number
-        ii.total_price=_price
-        ii.save()
+        return str(self.id)+" : "+str(self.status_now) 
+    def update_buyer(self,u):
+        self.buyer=u
+        self.save()
+    def update_cause(self,s):
+        self.cause=s
+        self.save()
+    def update_status_now(self,status,user):
+        self.status_now=status
+        self.verifier=user
+        self.save()
+        ih=Invoice_history()
+        ih.user=user
+        ih.invoice=self
+        ih.status=status
+        ih.save()
+        return self
+    
+    def getInvoice_item(self,item):
+        i=Invoice_item.objects.get(item=item)
+        if i:
+            return i
+        else:
+            return Invoice_item.objects.create(item=item,invoice=self,number=0,price=0)
 
+    
 class Invoice_history(models.Model):
     user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=False)
     datetime=models.DateTimeField(auto_now_add=True)
-    status=models.CharField(choices=Status_choise,max_length=50,null=False,blank=False,default='create')
+    status=models.CharField(choices=Status_invoice,max_length=50,null=False,blank=False,default='create')
     invoice=models.ForeignKey(Invoice,on_delete=models.CASCADE,null=False,blank=False)
 
     def __str__(self) -> str:
@@ -284,12 +284,19 @@ class Invoice_history(models.Model):
     
 class Invoice_item(models.Model):
     invoice=models.ForeignKey(Invoice,on_delete=models.CASCADE,null=False,blank=False)
-    item=models.ForeignKey(Items_seller,on_delete=models.DO_NOTHING,null=False,blank=False)
-    number=models.FloatField(max_length=20,null=False,blank=False)
-    total_price=models.FloatField(max_length=200,null=False,blank=False)
+    item=models.ForeignKey(Items_seller,on_delete=models.DO_NOTHING,null=True,blank=True)
+    number=models.FloatField(max_length=20,null=True,blank=False,default=0)
+    price=models.FloatField(max_length=200,null=True,blank=False,default=0)
 
     def __str__(self) -> str:
-        return str(self.id)+" : "+self.invoice+" : "+self.item.title 
+        return str(self.id)+" : "+str(self.invoice.id)+" : "+self.item.item.title 
+
+class LikeItems_seller(models.Model):
+    item=models.ForeignKey(Items_seller,on_delete=models.CASCADE,null=False,blank=False)
+    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
+    type=models.IntegerField(null=False,blank=False,default=0)
+    def __str__(self) -> str:
+        return str(self.id)+" : "+str(self.user.username)+" : "+self.item.title 
 
 class Group_join(models.Model):
     name=models.CharField(max_length=200,blank=False,null=False)
@@ -299,7 +306,7 @@ class Group_join(models.Model):
     
     def updateName(self,name):
         self.name=self.name+name
-        self.save       
+        self.save()       
 
 class Chat(models.Model):
     user=models.ForeignKey(User,models.CASCADE,null=False,blank=False)
@@ -311,7 +318,6 @@ class Chat(models.Model):
     def __str__(self) -> str:
         return str(self.id)+" : "+self.user.get_full_name()+" : "+str(self.groups) +" : "+ str(self.time) +" : "+ self.stastus
     
-
 class Group_user_join(models.Model):
     user=models.ForeignKey(User,models.CASCADE,null=False,blank=False)
     group_join=models.ForeignKey(Group_join,models.CASCADE,null=False,blank=False)
@@ -319,9 +325,6 @@ class Group_user_join(models.Model):
     last_chat=models.ForeignKey(Chat,models.SET_NULL,null=True,blank=True)
     def __str__(self) -> str:
         return str(self.id)+" : "+self.user.get_full_name()+" : "+str(self.group_join)
-    
-    
-
 
 class HistoryView(models.Model):
     item=models.ForeignKey(Items_seller,on_delete=models.CASCADE,null=False,blank=False)
@@ -439,3 +442,19 @@ class HistoryMutation(models.Model):
             return change_message or gettext("No fields changed.")
         else:
             return self.change_message
+        
+class HistoryFileUp(models.Model):
+    title=models.TextField(max_length=250,null=True,blank=True)
+    file=models.FileField(upload_to='static/upload/fileupload/%Y/%m',null=False,blank=False)
+    user=models.ForeignKey(User,models.DO_NOTHING,null=True,blank=True)
+    size=models.IntegerField(blank=True,null=True)
+    typefile=models.TextField(max_length=250,null=True,blank=True)
+    time=models.DateTimeField(auto_now_add=True,null=True,blank=True)
+    def __str__(self) -> str:
+        return self.file +" : " +self.typefile +" : " +str(self.size)
+    def create(self,user,file,filetype):
+        self.file=file
+        self.user=user
+        self.typefile=filetype
+        return self
+        

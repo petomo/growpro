@@ -95,7 +95,7 @@ admin.site.register(Menu)
 admin.site.register(Layout,layoutAdmin)
 admin.site.register(Layout_catergory)
 admin.site.register(Items_seller)
-
+admin.site.register(Invoice)
 
 #product
 admin.site.register(Catergory)

@@ -72,6 +72,9 @@ GRAPHENE = {
     'MIDDLEWARE': [
         'graphql_jwt.middleware.JSONWebTokenMiddleware',
     ],
+    'SCALAR_TYPES': [
+        'graphene_file_upload.scalars.Upload',
+    ]
 }
 
 TEMPLATES = [

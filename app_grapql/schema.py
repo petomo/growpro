@@ -1,18 +1,44 @@
 import graphene
-from graphene import relay
+from graphene import relay,Mutation, ObjectType, String, Boolean, Field
 from graphql_relay import from_global_id
 from graphene_django import DjangoObjectType
 from graphene_django.filter import DjangoFilterConnectionField
 from graphql_auth.bases import Output,MutationMixin,DynamicArgsMixin
+from graphql_auth.types import ExpectedErrorType
+#from django.core.files.storage import FileSystemStorage
+from django.core.files.base import ContentFile
+from django.core.files.uploadedfile import UploadedFile
+from graphene_file_upload.scalars import Upload
 
 from app_grapql.models import *
-  
+
 #Types
 class UserType(DjangoObjectType):
     class Meta:
         model = User
         interfaces = (relay.Node, )
-             
+
+class SellerType(DjangoObjectType):
+    class Meta:
+        model = Seller
+        fields='__all__'
+        filter_fields='__all__'
+        interfaces = (relay.Node, )
+
+class BuyerType(DjangoObjectType):
+    class Meta:
+        model = Buyer
+        fields='__all__'
+        filter_fields='__all__'
+        interfaces = (relay.Node, )
+
+class SupplierType(DjangoObjectType):
+    class Meta:
+        model = Supplier
+        fields='__all__'
+        filter_fields='__all__'
+        interfaces = (relay.Node, )
+
 class PageType(DjangoObjectType):
     class Meta:
         model = Page
@@ -139,6 +165,20 @@ class HistoryMutationType(DjangoObjectType):
         filter_fields='__all__'
         interfaces = (relay.Node, )
 
+class HistoryUploadfileType(DjangoObjectType):
+    class Meta:
+        model=HistoryFileUp
+        fields='__all__'
+        filter_fields=("title","user","size","typefile","id")
+        interfaces = (relay.Node, )
+
+class LikeItemSellerType(DjangoObjectType):
+    class Meta:
+        model = LikeItems_seller
+        fields='__all__'
+        filter_fields='__all__'
+        interfaces = (relay.Node, )
+
 #action
 class ChangeFirtNameAction(Output):
     """
@@ -225,21 +265,24 @@ class CreatRomAction(Output):
     @classmethod
     def resolve_mutation(cls, root, info, **kwargs):
         user=info.context.user
-        rom=None
-        cls(success=False,errors=[{"message":"User does not exist"}])
+        cls.success=False
+        cls.errors=[{"message":"User does not exist"}]
+        cls.rom=None
         if user.is_authenticated:
             member_name=kwargs.get("member")
-            member=User.objects.filter(username__contains=member_name)
+            member=User.objects.get(username=member_name)
             if member:
                 rom_dest='&'+user.username+'&'+member_name
-                rom=Group_join.objects.get(name__contains=rom_dest)
-                if rom:
-                    return CreatRomAction(rom,cls)
-                rom= Group_join.objects.create(dest=rom_dest,name=rom_dest)
-                rom.save()
-                cls(success=True,errors=None)             
-                return CreatRomAction(rom,cls)
-        return  CreatRomAction(rom,cls)
+                rom,_=Group_join.objects.get_or_create(name__contains=rom_dest)
+                if _:
+                    rom.dest=rom_dest
+                    rom.save()
+                cls.success=True
+                cls.errors=None
+                cls.rom=rom             
+                return cls
+            cls.errors=[{"message":"Member does not exist"}]
+        return  cls
 
 class JoinRomAction(Output):
     """
@@ -254,8 +297,8 @@ class JoinRomAction(Output):
     @classmethod
     def resolve_mutation(cls, root, info, **kwargs):
         user=info.context.user
-        rom=None
-        cls(success=False,errors=[{"message":"User does not exist"}])
+        cls.success=False
+        cls.errors=[{"message":"User does not exist"}]
         if user.is_authenticated:
             romId=kwargs.get("rom")
             _, model_id = from_global_id(romId)
@@ -263,9 +306,13 @@ class JoinRomAction(Output):
             if rom:
                 g=Group_user_join.objects.create(user=user,group_join=rom)
                 g.save()
-                rom.updateName(str('&'+user.username))               
-                return cls(success=True,errors=None)
-            return cls(success=False,errors=[{"message":"Rom does not exist"}])
+                rom.updateName(str('&'+user.username))
+                cls.success=True
+                cls.errors=None
+                cls.rom=rom               
+                return cls
+            cls.errors=[{"message":"Rom does not exist"}]
+            return cls
         return cls
 
 class ChatRomAction(Output):
@@ -282,23 +329,26 @@ class ChatRomAction(Output):
     @classmethod
     def resolve_mutation(cls, root, info, **kwargs):
         user=info.context.user
-        rom=None
-        cls(success=False,errors=[{"message":"User does not exist"}])
+        cls.success=False
+        cls.errors=[{"message":"User does not exist"}]
+        cls.chat=None
         if user.is_authenticated:
             romId=kwargs.get("rom")
             dest=kwargs.get("dest")
             _, model_id = from_global_id(romId)
-            rom=Group_join.objects.filter(id__contains=model_id)
+            rom=Group_join.objects.get(id=model_id)
             if rom:
                 chat=Chat.objects.create(user=user,dest=dest,groups=rom,stastus=6)
                 chat.save
                 g=Group_user_join.objects.filter(user=user,group_join=rom)
                 g.last_chat=chat            
-                cls(success=True,errors=None)
-                return ChatRomAction(chat,cls) 
-            cls(success=False,errors=[{"message":"Rom does not exist"}])
-            return ChatRomAction(chat,cls)  
-        return ChatRomAction(chat,cls) 
+                cls.success=True
+                cls.errors=None
+                cls.chat=chat
+                return cls
+            cls.errors=[{"message":"Rom does not exist"}]
+            return cls  
+        return cls
 
 class get_or_create_CartAction(Output):
     """
@@ -313,21 +363,20 @@ class get_or_create_CartAction(Output):
     @classmethod
     def resolve_mutation(cls, root, info, **kwargs):
         user=info.context.user
-        invoice=None
-        cls(success=False,errors=[{"message":"User does not exist"}])
+        cls.errors=[{"message":"User does not exist"}]
+        cls.success=False
+        cls.invoice=None
         if user.is_authenticated:
-            invoice=Invoice.objects.get(buyer=user,status_now=1)            
-            if invoice:
-                invoice.save()               
-                cls(success=True,errors=None)
-                return get_or_create_CartAction(invoice,cls)
-            invoice=user.creat_Invoice_buyer()
-            if invoice:              
-                cls(success=True,errors=None)
-                return get_or_create_CartAction(invoice,cls)
-            invoice=user.creat_Invoice_buyer()
-            return get_or_create_CartAction(invoice,cls(success=False,errors=[{"message":"Invoice does not exist"}])) 
-        return get_or_create_CartAction(invoice,cls)
+            _invoice,_=Invoice.objects.get_or_create(buyer=user,status_now=1)            
+            if _invoice:
+                _invoice.save()               
+                cls.success=True
+                cls.errors=None
+                cls.invoice=_invoice
+                return cls
+            cls.errors=[{"message":"Invoice don't create"}]
+            return cls 
+        return cls
 
 class add_item_CartAction(Output):
     
@@ -338,38 +387,93 @@ class add_item_CartAction(Output):
 
     It needs a token to authenticate.
     """
-    invoice=graphene.Field(InvoiceType)
+    invoice=Field(InvoiceType)
+
     class Arguments:
         item=graphene.String(required=True)
         number=graphene.String(required=True)
-        price=graphene.String(required=True)
-            
-    @classmethod
+        price=graphene.String(required=True)   
+    
+    @classmethod   
     def resolve_mutation(cls, root, info, **kwargs):
+        #cls=add_item_CartAction()
         user=info.context.user
-        invoice=None
-        item=None
-        cls(success=False,errors=[{"message":"User does not exist"}])
-        _number=kwargs.get("rom")
+        cls.errors=[{"message":"User does not exist"}]
+        cls.success=False
+        _number=float(kwargs.get("number")) 
         _item=kwargs.get("item")
-        _price=kwargs.get("price")
+        _price=float(kwargs.get("price"))
+
         if user.is_authenticated:
-            invoice=Invoice.objects.get(buyer=user,status_now=1)            
+            _buyer,_=Buyer.objects.get_or_create(user=user)
+            invoice,_=Invoice.objects.get_or_create(buyer=_buyer,status_now=1)
+            if _:
+                invoice.verifier=user
             if invoice:
-                pass
-            else: 
-                invoice=user.creat_Invoice_buyer()
-            if invoice:
+                invoice.save()
                 if _item:
                     _, model_item_id = from_global_id(_item)
                     item=Items_seller.objects.get(id=model_item_id)
                 if item and _number and _price:
-                    invoice.creat_Invoice_item(item,_number,_price)              
-                    cls(success=True,errors=None)
-                    return get_or_create_CartAction(invoice,cls)
-            return add_item_CartAction(invoice,cls(success=False,errors=[{"message":"Invoice does not exist"}])) 
-        return add_item_CartAction(invoice,cls)
+                    print("//////////////////////////")
+                    _i=invoice.getInvoice_item(item)
+                    if _i:
+                        _i.price=_price
+                        if _i.number:
+                            _i.number+=_number
+                        else:_i.number=_number
+                        _i.save()
+                        cls.success=True
+                        cls.errors=None
+                        cls.invoice=invoice
+                        return cls
+                    cls.errors=[{"message":"Invoice_item does not exist"}]
+                    return cls
+                cls.errors=[{"message":"arguments does not exist"}]
+                return cls
+            cls.errors=[{"message":"invoice does not exist"}]
+            return cls   
+        return cls
 
+    
+class UploadFileAction(Output):
+    fileUpload=graphene.Field(HistoryUploadfileType)
+    class Arguments:
+        file = Upload(required=True)
+        fileType=graphene.String(required=True)
+    
+    def resolve_mutation(cls, root, info, **kwargs):
+        cls.success=False
+        cls.errors=[{"message":"user does not exist"}]
+        # Xử lý tệp tin ở đây
+        user=info.context.user
+        cls.fileUpload=None
+        file=None
+
+        if user.is_authenticated:
+            file=kwargs.get("file")
+            fileType=kwargs.get("fileType")
+        else: return cls
+
+        if file:
+            content_file = ContentFile(file.read())
+            uploaded_file = UploadedFile(file=content_file, name=file.name)
+            fileUpload=HistoryFileUp.create(user=user,file=uploaded_file,filetype=fileType)
+            fileUpload.size=uploaded_file.size
+            fileUpload.title=file.name
+        else: 
+            cls.errors=[{"message":"file does not exist"}]
+            return cls
+        
+        if fileUpload:
+            fileUpload.save()
+            cls.success=True
+            cls.errors=None
+            cls.fileUpload=fileUpload
+            return cls
+        cls.errors=[{"message":"file does not save"}]
+        return cls
+    
 #MutationFunction
 class ChangeFirtName(MutationMixin, DynamicArgsMixin, ChangeFirtNameAction, graphene.Mutation):
     __doc__ = ChangeFirtNameAction.__doc__
@@ -399,18 +503,23 @@ class ChatRom(MutationMixin, DynamicArgsMixin, ChatRomAction, graphene.Mutation)
     __doc__ = ChatRomAction.__doc__
     _required_args = ["rom","dest"]
 
-class CreateInvoice(MutationMixin, DynamicArgsMixin, get_or_create_CartAction, graphene.Mutation):
-    __doc__ = JoinRomAction.__doc__
+class Get_or_createInvoice(MutationMixin, DynamicArgsMixin, get_or_create_CartAction, graphene.Mutation):
+    __doc__ = get_or_create_CartAction.__doc__
 
 class Add_item_cart(MutationMixin, DynamicArgsMixin, add_item_CartAction, graphene.Mutation):
     __doc__ = add_item_CartAction.__doc__
     _required_args = ["item","number","price"]
+
+class UploadFile_mutation(MutationMixin, DynamicArgsMixin, UploadFileAction, graphene.Mutation):
+    __doc__ = UploadFileAction.__doc__
+    _required_args = ["file","fileType"]
 
 #Query
 class Query(graphene.ObjectType):
     all_page = DjangoFilterConnectionField(PageType)
     page = relay.Node.Field(PageType)
     item=relay.Node.Field(ItemType)
+    items_seller=relay.Node.Field(Items_sellerType)
     all_Page_layoutType = DjangoFilterConnectionField(Page_layoutType)
     page_layoutType = relay.Node.Field(Page_layoutType)
     all_menu = DjangoFilterConnectionField(MenuType)
@@ -430,13 +539,32 @@ class Query(graphene.ObjectType):
     all_Group_User_join=DjangoFilterConnectionField(Group_user_joinType)
     group_user_join=relay.Node.Field(Group_user_joinType)
     all_Chat=DjangoFilterConnectionField(ChatType)
-    chatType=relay.Node.Field(ChatType)
+    chat=relay.Node.Field(ChatType)
+    allBuyer=DjangoFilterConnectionField(BuyerType)
+    buyer=relay.Node.Field(BuyerType)
+    allSeller=DjangoFilterConnectionField(SellerType)
+    seller=relay.Node.Field(SellerType)
+    allSupplier=DjangoFilterConnectionField(SupplierType)
+    supplier=relay.Node.Field(SupplierType)
+    allLikeItemSeller=DjangoFilterConnectionField(LikeItemSellerType)
+    likeItemSeller=relay.Node.Field(LikeItemSellerType)
 
     all_Item=DjangoFilterConnectionField(ItemType,order_by_fields=graphene.String())
+    all_Items_seller=DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
     page_by_name = graphene.Field(PageType, name=graphene.String(required=True))
-    
 
-    
+    count_all_Items_seller = graphene.Int()
+    count_all_Items = graphene.Int()
+    count_allSeller = graphene.Int()
+    count_allUser = graphene.Int()
+    def resolve_count_all_Items_seller(self, info):
+        return Items_seller.objects.count()
+    def resolve_count_all_Items(self, info):
+        return Item.objects.count()
+    def resolve_count_allSeller(self, info):
+        return Seller.objects.count()
+        
+        
 #Mutation
 class Mutation(graphene.ObjectType):
     changeFirtName=ChangeFirtName.Field()
@@ -446,7 +574,32 @@ class Mutation(graphene.ObjectType):
     creatRom=CreatRom.Field()
     joinRom=JoinRom.Field()
     chat=ChatRom.Field()
-    get_or_createInvoice=CreateInvoice.Field()
+    get_or_createInvoice=Get_or_createInvoice.Field()
     add_item_invoice=Add_item_cart.Field()
+    uploadFile=UploadFile_mutation.Field()
 
 schema = graphene.Schema(query=Query)
+
+
+'''tham khảo
+class UploadFileAction(Output):
+    file_url = graphene.String()
+    class Arguments:
+        file = Upload(required=True)
+    
+    def resolve_mutation(cls, root, info, **kwargs):
+        cls(success=False,errors=[{"message":"file does not exist"}])
+        # Xử lý tệp tin ở đây
+        file=kwargs.get("file")
+        content_file = ContentFile(file.read())
+        uploaded_file = UploadedFile(file=content_file, name=file.name)
+        
+        # Lưu trữ uploaded_file vào thư mục media/upload
+        fs = FileSystemStorage(location='app_grapql/static/upload/fileupload/%Y/%m')
+        #if uploaded_file.size>1024*1024*10:
+        filename = fs.save(uploaded_file.name, uploaded_file)
+        file_url = fs.url(filename)
+        if file_url:
+            cls(success=True,errors=None)
+        return UploadFileAction(file_url,cls)
+'''
