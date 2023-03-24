@@ -1,14 +1,15 @@
+#from django.core.validators import *
 from django.db import models
 import json
-from django.contrib.auth.models import AbstractUser
 from ckeditor.fields import RichTextField
-from django.contrib.admin.models import LogEntry,LogEntryManager
+from django.core.exceptions import ValidationError
+from django.contrib.auth.models import AbstractUser
+from django.contrib.admin.models import LogEntryManager
 from django.contrib.contenttypes.models import ContentType
 from django.utils.text import get_text_list
 from django.utils.translation import gettext
 from django.utils.translation import gettext_lazy as _
-#from django.core.validators import *
-from django.core.exceptions import ValidationError
+
 
 # Create your models here.
 ADDITION = 1
@@ -18,6 +19,9 @@ CANCLE=4
 SEND=5
 READ=6
 COMPLETE=7
+ORDER=8
+APPROVE=9
+
 
 ACTION_FLAG_CHOICES = (
     (ADDITION, _("Addition")),
@@ -27,11 +31,13 @@ ACTION_FLAG_CHOICES = (
 
 Status_invoice=(
     (ADDITION, _("Addition")),
-    (DELETION, _("Deletion")),
+    (ORDER, _("Order")),
+    (APPROVE, _("Approve")),
+    (SEND, _("Send")),
     (CANCLE, _("Cancel")),
+    (DELETION, _("Deletion")),
     (COMPLETE, _("Complete")),
 )
-
 Status_chat=(
     (ADDITION, _("Addition")),
     (CHANGE, _("Change")),
@@ -45,12 +51,12 @@ Status_like=(
     (1,("like")),
     (2,("distlike")),
 )
-
 Status_item=(
     ('Private','Private'),
     ('Internal','Internal'),
     ('Public','Public'),
 )
+
 def validate_decimals(value):
     try:
         return round(float(value), 2)
@@ -218,7 +224,7 @@ class Items_seller(models.Model):
     title_i_s_stype=models.CharField(max_length=250,null=True,blank=True)
     seller=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
     seller_stype=models.CharField(max_length=250,null=True,blank=True)
-    stastus=models.CharField(max_length=250,choices=Status_item,null=True,blank=True)
+    stastus=models.CharField(max_length=250,choices=Status_item,null=False,blank=False,default="Public")
     sale_time=models.DateTimeField(null=True,blank=True)
     number=models.IntegerField(null=False,blank=False,default=0)
     price_sell=models.FloatField(null=False,blank=False,default=0)
@@ -238,7 +244,7 @@ class Catergory(Content):
     avatar=models.ImageField(upload_to='static/upload/Catergory/%Y/%m',null=True,blank=True)    
 
 class Tag_catergory(models.Model):
-    item=models.ForeignKey(Item,on_delete=models.SET_NULL,null=True,blank=False)
+    item=models.ForeignKey(Item,on_delete=models.CASCADE,null=True,blank=False)
     catergory=models.ForeignKey(Catergory,on_delete=models.CASCADE,null=False,blank=False)
     def __str__(self) :
         return str(self.id) +" : "+ str(self.item.id) +" : "+ str(self.catergory.title)
@@ -277,6 +283,13 @@ class Invoice(models.Model):
         else:
             return Invoice_item.objects.create(item=item,invoice=self,number=0,price=0)
 
+class InvoiceInfo(models.Model):
+    invoice=models.ForeignKey(Invoice,on_delete=models.CASCADE,null=False,blank=False)
+    fullname=models.CharField(max_length=200,null=False,blank=False,default="")
+    address=models.CharField(max_length=200,null=False,blank=False,default="")
+    phone=models.IntegerField(null=False,blank=False,default=0)
+    email=models.CharField(max_length=200,null=False,blank=False,default="")
+    cause=models.CharField(max_length=200,null=True,blank=True,default="")
     
 class Invoice_history(models.Model):
     user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=False)
@@ -290,8 +303,8 @@ class Invoice_history(models.Model):
 class Invoice_item(models.Model):
     invoice=models.ForeignKey(Invoice,on_delete=models.CASCADE,null=False,blank=False)
     item=models.ForeignKey(Items_seller,on_delete=models.DO_NOTHING,null=True,blank=True)
-    number=models.FloatField(max_length=20,null=True,blank=False,default=0)
-    price=models.FloatField(max_length=200,null=True,blank=False,default=0)
+    number=models.IntegerField(null=True,blank=False,default=0)
+    price=models.FloatField(null=True,blank=False,default=0)
 
     def __str__(self) -> str:
         return str(self.id)+" : "+str(self.invoice.id)+" : "+self.item.item.title 
@@ -301,12 +314,12 @@ class LikeItems_seller(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False)
     type=models.IntegerField(choices=Status_like,null=False,blank=False,default=0)
     def __str__(self) -> str:
-        return str(self.id)+" : "+str(self.user.username)+" : "+self.item.title
+        return str(self.id)+" : "+str(self.user.username)+" : "+self.item.item.title
     def like(self):
         if self.type==1:self.type=0
         else: self.type=1
         self.save()
-    def distlike(self):
+    def dislike(self):
         if self.type==2:self.type=0
         else: self.type=2
         self.save()  

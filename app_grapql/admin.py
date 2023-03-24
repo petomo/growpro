@@ -96,8 +96,10 @@ admin.site.register(Layout,layoutAdmin)
 admin.site.register(Layout_catergory)
 admin.site.register(Items_seller)
 admin.site.register(Invoice)
+admin.site.register(LikeItems_seller)
 
 #product
 admin.site.register(Catergory)
+admin.site.register(Tag_catergory)
 admin.site.register(Item,itemAdmin)
 
