@@ -554,6 +554,47 @@ class order_cartAction(Output):
             return cls
         return cls
 
+class cancel_cartAction(Output):
+    
+    """
+    cancel invoice with invoice `status = ORDER/APPROVE`.
+
+    It needs a token to authenticate.
+    """
+
+    class Arguments:
+        invoice=graphene.String(required=True)
+        cause=graphene.String(required=True)
+            
+    @classmethod   
+    def resolve_mutation(cls, root, info, **kwargs):
+        _invoiceID=kwargs.get("invoice")
+        try:_cause=kwargs.get("cause")
+        except:_cause=""
+
+        user=info.context.user
+        cls.errors=[{"message":"User does not exist"}]
+        cls.success=False
+        cls.invoice=None
+        if user.is_authenticated:
+            _buyer=Buyer.objects.get(user=user)
+            if _buyer:
+                _, model_item_id = from_global_id(_invoiceID)
+                _iv=Invoice.objects.get(buyer=_buyer,id=model_item_id)
+                if _iv:
+                    _iv.status_now=4
+                    _iv.verifier=user
+                    _iv.cause=_cause
+                    _iv.save()
+                    cls.success=True
+                    cls.errors=None
+                    return cls
+                cls.errors=[{"message":"Invoice does not exist"}]
+                return cls
+            cls.errors=[{"message":"Buyer does not exist"}]
+            return cls
+        return cls
+
 
 class add_item_LikeAction(Output):
     
@@ -728,6 +769,11 @@ class Ordercart(MutationMixin, DynamicArgsMixin, order_cartAction, graphene.Muta
     _required_args = ["fullname","address","phone","email","cause"]
 
 
+class Cancelcart(MutationMixin, DynamicArgsMixin, cancel_cartAction, graphene.Mutation):
+    __doc__ = cancel_cartAction.__doc__
+    _required_args = ["invoice","cause"]
+
+
 class Add_item_Like(MutationMixin, DynamicArgsMixin, add_item_LikeAction, graphene.Mutation):
     __doc__ = add_item_LikeAction.__doc__
     _required_args = ["item"]
@@ -778,8 +824,10 @@ class Query(graphene.ObjectType):
     supplier=graphene.relay.Node.Field(SupplierType)
     allLikeItemSeller=filter.DjangoFilterConnectionField(LikeItemSellerType)
     likeItemSeller=graphene.relay.Node.Field(LikeItemSellerType)
-
-
+    
+    
+    filterItemSeller=graphene.List(Items_sellerType,title=graphene.String(required=True),stastus=graphene.String(required=True))
+    filterItemSellerCt=graphene.List(Items_sellerType,catergory=graphene.String(required=True),stastus=graphene.String(required=True),number=graphene.String(required=True),page=graphene.String(required=True))
     all_Item=filter.DjangoFilterConnectionField(ItemType,order_by_fields=graphene.String())
     all_Items_seller=filter.DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
     page_by_name = graphene.Field(PageType, name=graphene.String(required=True))
@@ -797,14 +845,34 @@ class Query(graphene.ObjectType):
         return Seller.objects.count()
     def resolve_count_Items_seller_catergory(self, info, **kwargs):
         total=0
-        c,_=Catergory.objects.get(name=kwargs.get('catergory'))
-        if _==False:
+        try:
+            c=Catergory.objects.get(name=kwargs.get('catergory'))
             t=Tag_catergory.objects.filter(catergory=c)
             for i in t :
                 total+= Items_seller.objects.filter(stastus=kwargs.get('stastus'),item=i.item).count()
+        except : pass
         return total
     
-        
+    def resolve_filterItemSellerCt(self, info, **kwargs):
+        total=[]
+        c=Catergory.objects.get(name=kwargs.get('catergory'))
+        t=Tag_catergory.objects.filter(catergory=c)
+        for i in t :
+            items= Items_seller.objects.filter(stastus=kwargs.get('stastus'),item=i.item)
+            if items:
+                for it in items:
+                    if it not in total:
+                        total.append(it)
+        n=int(kwargs.get('number'))
+        p=int(kwargs.get('page')) 
+        _s=p*n
+        _e=(p+1)*n
+        return total[_s:_e]
+    
+    def resolve_filterItemSeller(self, info ,**kwargs):
+        stastus=kwargs.get('stastus')
+        title=kwargs.get('title')
+        return Items_seller.objects.filter(item__title__contains=title,stastus=stastus)    
         
 #Mutation
 class Mutation(graphene.ObjectType):
@@ -821,6 +889,7 @@ class Mutation(graphene.ObjectType):
     disLikeItem=Add_item_disLike.Field()
     removeItemCart=Remove_item_cart.Field()
     orderCart=Ordercart.Field()
+    cancelCart=Cancelcart.Field()
 
     uploadFile=UploadFile_mutation.Field()
     

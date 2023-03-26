@@ -241,14 +241,15 @@ class Item_layout(models.Model):
     
 class Catergory(Content):
     parent=models.CharField(max_length=250,null=True,blank=True,default='0')
-    avatar=models.ImageField(upload_to='static/upload/Catergory/%Y/%m',null=True,blank=True)    
+    avatar=models.ImageField(upload_to='static/upload/Catergory/%Y/%m',null=True,blank=True)
+    
 
 class Tag_catergory(models.Model):
     item=models.ForeignKey(Item,on_delete=models.CASCADE,null=True,blank=False)
     catergory=models.ForeignKey(Catergory,on_delete=models.CASCADE,null=False,blank=False)
     def __str__(self) :
         return str(self.id) +" : "+ str(self.item.id) +" : "+ str(self.catergory.title)
-
+    
 class Invoice(models.Model):
     verifier=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=False)
     created_time=models.DateTimeField(auto_now_add=True)
