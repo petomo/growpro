@@ -159,7 +159,7 @@ class Content(models.Model):
     name=models.CharField(max_length=255,null=True,blank=True)
     name_styte=models.CharField(max_length=255,null=True,blank=True)
     def __str__(self) :
-        return str(self.id) +" : "+ self.title
+        return str(self.id) +" : "+ self.title+" : "+ self.name
 
 class Page(Content):
     style=models.CharField(max_length=250,null=True,blank=True)
@@ -190,7 +190,7 @@ class Layout(Content):
     catergory=models.ForeignKey(Layout_catergory,on_delete=models.SET_NULL,null=True,blank=True)
     background=models.ImageField(upload_to='static/upload/background/%Y/%m',null=True,blank=True)
     interval=models.IntegerField(null=True,blank=True,unique=False,default=5000)
-
+    
 class Layout_img(Content):
     layout=models.ForeignKey(Layout,on_delete=models.CASCADE)
     avatar=models.ImageField(upload_to='static/upload/Layout_img/%Y/%m')
@@ -237,13 +237,12 @@ class Item_layout(models.Model):
     items_seller=models.ForeignKey(Items_seller,on_delete=models.SET_NULL,null=True,blank=True)
     layout=models.ForeignKey(Layout,on_delete=models.CASCADE,null=False,blank=False)
     def __str__(self) :
-        return str(self.id) +" : "+ self.items_seller+" : "+ self.layout
+        return str(self.id) +" : "+ self.items_seller.item.title+" : "+self.items_seller.seller.get_username() +" : "+self.layout.title
     
 class Catergory(Content):
     parent=models.CharField(max_length=250,null=True,blank=True,default='0')
     avatar=models.ImageField(upload_to='static/upload/Catergory/%Y/%m',null=True,blank=True)
     
-
 class Tag_catergory(models.Model):
     item=models.ForeignKey(Item,on_delete=models.CASCADE,null=True,blank=False)
     catergory=models.ForeignKey(Catergory,on_delete=models.CASCADE,null=False,blank=False)
