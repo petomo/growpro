@@ -22,7 +22,6 @@ COMPLETE=7
 ORDER=8
 APPROVE=9
 
-
 ACTION_FLAG_CHOICES = (
     (ADDITION, _("Addition")),
     (CHANGE, _("Change")),
@@ -183,7 +182,8 @@ class Layout(Content):
     class Meta:
         ordering=["parent","priority"]
     priority=models.IntegerField(null=True,blank=True,unique=False)
-    dest=RichTextField(null=True)
+    dest=models.TextField(null=True,blank=False,default="")
+    user=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,default=None)
     dest_style=models.CharField(max_length=250,null=True,blank=True)
     styte=models.TextField(null=True,blank=True)
     parent=models.CharField(max_length=255,null=True,blank=True,default='0')

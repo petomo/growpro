@@ -99,18 +99,6 @@ WSGI_APPLICATION = 'Growpro_django.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
-'''DATABASES = {
-    'default': {
-        #'ENGINE': 'django.db.backends.sqlite3',
-        #'NAME': BASE_DIR / 'db.sqlite3',
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'railway',
-        'USER':'postgres',
-        'PASSWORD':'h25bwERgwx0AQ3ZOcvHt',
-        'HOST':'containers-us-west-132.railway.app',
-        'PORT':'7183',
-    }
-}'''
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -150,7 +138,7 @@ AUTHENTICATION_BACKENDS = [
 
 GRAPHQL_JWT = {
     "JWT_VERIFY_EXPIRATION": True,
-    "JWT_EXPIRATION_DELTA": timedelta(days=7),
+    "JWT_EXPIRATION_DELTA": timedelta(days=7),#minutes, seconds
     "JWT_LONG_RUNNING_REFRESH_TOKEN": True,
     "JWT_ALLOW_ANY_CLASSES": [
         "graphql_auth.mutations.Register",

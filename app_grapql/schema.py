@@ -825,7 +825,7 @@ class Query(graphene.ObjectType):
     
     filterItemSeller=graphene.List(Items_sellerType,title=graphene.String(required=True),stastus=graphene.String(required=True))
     filterItemSellerCt=graphene.List(Items_sellerType,catergory=graphene.String(required=True),stastus=graphene.String(required=True),number=graphene.String(required=True),page=graphene.String(required=True))
-    all_Item=filter.DjangoFilterConnectionField(ItemType,order_by_fields=graphene.String())
+    all_ItemSeller_order=filter.DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
     all_Items_seller=filter.DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
     page_by_name = graphene.Field(PageType, name=graphene.String(required=True))
 

@@ -13,7 +13,7 @@ from django.contrib.admin.models import LogEntry
 
 #page
 class layoutForm(forms.ModelForm):
-    dest=forms.CharField(widget=CKEditorUploadingWidget)
+    #dest=forms.CharField(widget=CKEditorUploadingWidget)
     class Meta:
         models=Layout
         fields='__all__'
