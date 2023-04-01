@@ -8,15 +8,18 @@ from graphql_auth.settings import graphql_auth_settings as app_settings
 from graphql_auth.constants import TokenAction
 from django.core.files.base import ContentFile,File
 from django.core.files.uploadedfile import UploadedFile
-from pathlib import Path
+from django.http import HttpResponse,JsonResponse
+from .models import User,HistoryFileUp
 import os
 #from graphql_jwt.shortcuts import get_token
 #from graphql_jwt.refresh_token.utils import get_refresh_token_model #TokenModel
 UserModel = get_user_model()
 urlfe="http://127.0.0.1:5000/"
+
+
 # Create your views here.
-from django.http import HttpResponse,JsonResponse
-from .models import User,HistoryFileUp
+
+
 def index(request):
     return render(request, template_name='index.html',context={'name':'thong'})
 
@@ -62,12 +65,9 @@ def uploadFile(request):
                 if _files_old:
                     for p in _files_old:
                         current_dir=""
-                        url = os.path.abspath(os.path.join(current_dir, os.pardir))+"/growpro/app_grapql%s"%p.file.url                        
-                        print(url)
+                        url = os.path.abspath(os.path.join(current_dir, os.pardir))+"/growpro/app_grapql%s"%p.file.url
                         if os.path.isfile(url):
-                            print("là file")
                             with open(url,'rb') as f:
-                                print("soanhs")
                                 if _file == f.read():
                                     result = {'status': True,'url':p.file.url,'message':'file exists'}  
                                     return JsonResponse(result) 
