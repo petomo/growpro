@@ -19,7 +19,6 @@ urlfe="http://127.0.0.1:5000/"
 
 # Create your views here.
 
-
 def index(request):
     return render(request, template_name='index.html',context={'name':'thong'})
 
