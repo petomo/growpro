@@ -13,6 +13,13 @@ class UserType(DjangoObjectType):
         model = User
         interfaces = (graphene.relay.Node, )
 
+class PanerType(DjangoObjectType):
+    class Meta:
+        model = Paner
+        fields='__all__'
+        filter_fields='__all__'
+        interfaces = (graphene.relay.Node, )
+
 class SellerType(DjangoObjectType):
     class Meta:
         model = Seller
@@ -705,6 +712,7 @@ class UploadFileAction(Output):
         else: return cls
 
         if file:
+            print(file)
             content_file = ContentFile(file.read())
             uploaded_file = UploadedFile(file=content_file, name=file.name)
             fileUpload=HistoryFileUp.create(user=user,file=uploaded_file,filetype=fileType)
@@ -793,6 +801,8 @@ class Query(graphene.ObjectType):
     items_seller=graphene.relay.Node.Field(Items_sellerType)
     all_Page_layoutType = filter.DjangoFilterConnectionField(Page_layoutType)
     page_layoutType = graphene.relay.Node.Field(Page_layoutType)
+    all_Layout_catergory = filter.DjangoFilterConnectionField(Layout_catergoryType)
+    layout_catergory = graphene.relay.Node.Field(Layout_catergoryType)
     all_menu = filter.DjangoFilterConnectionField(MenuType)
     menu = graphene.relay.Node.Field(MenuType)
     all_layout=filter.DjangoFilterConnectionField(LayoutType)
@@ -819,6 +829,8 @@ class Query(graphene.ObjectType):
     seller=graphene.relay.Node.Field(SellerType)
     allSupplier=filter.DjangoFilterConnectionField(SupplierType)
     supplier=graphene.relay.Node.Field(SupplierType)
+    allPaner=filter.DjangoFilterConnectionField(PanerType)
+    paner=graphene.relay.Node.Field(PanerType)
     allLikeItemSeller=filter.DjangoFilterConnectionField(LikeItemSellerType)
     likeItemSeller=graphene.relay.Node.Field(LikeItemSellerType)
     

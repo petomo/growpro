@@ -78,13 +78,17 @@ class User(AbstractUser):
         like=LikeItems_seller.objects.get_or_create(user=self,item=item,type=type)
         like.save()
    
+class Paner(models.Model):
+    typeuser=models.IntegerField(null=False,blank=True,default=1)
+    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=True)
+
 class Seller(models.Model):
     title=models.CharField(max_length=250,null=True,blank=True)
     total_sales=models.IntegerField(null=False,blank=True,default=0)
     month_sales=models.IntegerField(null=False,blank=True,default=0)
     year_sales=models.IntegerField(null=False,blank=True,default=0)
     typeuser=models.IntegerField(null=False,blank=True,default=1)
-    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=False)
+    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=True)
 
     def __str__(self) :
         return str(self.id) +" : "+ self.user.username+" : "+ str(self.typeuser)
@@ -107,7 +111,7 @@ class Supplier(models.Model):
     month_sales=models.IntegerField(null=False,blank=True,default=0)
     year_sales=models.IntegerField(null=False,blank=True,default=0)
     typeuser=models.IntegerField(null=False,blank=True,default=1)
-    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=False)
+    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=True)
 
     def __str__(self) :
         return str(self.id) +" : "+ self.user.username+" : "+ str(self.typeuser)
@@ -129,7 +133,7 @@ class Buyer(models.Model):
     month_spending=models.IntegerField(null=False,blank=True,default=0)
     year_spending=models.IntegerField(null=False,blank=True,default=0)
     typeuser=models.IntegerField(null=False,blank=True,default=1)
-    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=False)
+    user=models.ForeignKey(User,on_delete=models.CASCADE,null=False,blank=False,unique=True)
 
     def __str__(self) :
         return str(self.id) +" : "+ self.user.username+" : "+str(self.typeuser)
@@ -151,11 +155,13 @@ class Buyer(models.Model):
 class Content(models.Model):
     class Meta:
         abstract=True
+        unique_together = ['name','title']
+
     title=models.CharField(max_length=250,null=True,blank=True)
     title_stype=models.CharField(max_length=250,null=True,blank=True)
     show=models.BooleanField(default=True)
     active=models.BooleanField(default=True)
-    name=models.CharField(max_length=255,null=True,blank=True)
+    name=models.CharField(max_length=255,null=False,blank=False,default="")
     name_styte=models.CharField(max_length=255,null=True,blank=True)
     def __str__(self) :
         return str(self.id) +" : "+ self.title+" : "+ self.name
@@ -165,7 +171,6 @@ class Page(Content):
 
 class Menu(Content):
     class Meta:
-        unique_together=['title']
         ordering=["parent","priority"]
     priority=models.IntegerField(null=True,blank=True)
     parent=models.CharField(max_length=250,null=True,blank=True)
@@ -477,10 +482,6 @@ class HistoryFileUp(models.Model):
     typefile=models.TextField(max_length=250,null=True,blank=True)
     time=models.DateTimeField(auto_now_add=True,null=True,blank=True)
     def __str__(self) -> str:
-        return self.file +" : " +self.typefile +" : " +str(self.size)
-    def create(self,user,file,filetype):
-        self.file=file
-        self.user=user
-        self.typefile=filetype
-        return self
+        return str(self.id)+"; titel : "+self.title+"; user : "+self.user.username+"; type : "+self.typefile+"; size : " +str(self.size)+"; time : " +str(self.time)
+    
         

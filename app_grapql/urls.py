@@ -5,4 +5,5 @@ urlpatterns = [
     path('', views.index,name="index"),   
     path('activate/<str:token>/', views.activate, name='urltoken'),
     path('password-reset/<str:token>/', views.resetPass, name='urltoken'),
+    path('uploadfile', views.uploadFile, name='file'),
 ]

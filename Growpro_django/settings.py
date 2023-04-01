@@ -22,7 +22,6 @@ import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -185,7 +184,7 @@ STATIC_URL = 'app_grapql/static/'
 STATICFILES_DIRS = [os.path.join(BASE_DIR, 'app_grapql/static/staticfiles')]
 STATIC_ROOT =os.path.join(BASE_DIR, 'staticfiles')
 MEDIA_ROOT='%s/app_grapql/' %BASE_DIR
-MEDIA_URL= '/static/media/'
+MEDIA_URL= ''
 CKEDITOR_UPLOAD_PATH = 'content/ckeditor/'
 
 # Default primary key field type

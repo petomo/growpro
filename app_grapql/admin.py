@@ -103,3 +103,6 @@ admin.site.register(Catergory)
 admin.site.register(Tag_catergory)
 admin.site.register(Item,itemAdmin)
 
+#history
+admin.site.register(HistoryFileUp)
+
