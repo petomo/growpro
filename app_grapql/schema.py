@@ -2,8 +2,6 @@ from graphql_auth.bases import Output,MutationMixin,DynamicArgsMixin,graphene
 from graphql_relay import from_global_id
 from graphene_django import DjangoObjectType,filter
 from django.core.files.base import ContentFile,File
-from django.core.files.uploadedfile import UploadedFile
-from graphene_file_upload.scalars import Upload
 
 from app_grapql.models import *
 
@@ -691,46 +689,7 @@ class add_item_disLikeAction(Output):
             return cls   
         return cls
 
-#file    
-class UploadFileAction(Output):
-    fileUpload=graphene.Field(HistoryUploadfileType)
-    class Arguments:
-        file = Upload(required=True)
-        fileType=graphene.String(required=True)
-    
-    def resolve_mutation(cls, root, info, **kwargs):
-        cls.success=False
-        cls.errors=[{"message":"user does not exist"}]
-        # Xử lý tệp tin ở đây
-        user=info.context.user
-        cls.fileUpload=None
-        file=None
-
-        if user.is_authenticated:
-            file=kwargs.get("file")
-            fileType=kwargs.get("fileType")
-        else: return cls
-
-        if file:
-            print(file)
-            content_file = ContentFile(file.read())
-            uploaded_file = UploadedFile(file=content_file, name=file.name)
-            fileUpload=HistoryFileUp.create(user=user,file=uploaded_file,filetype=fileType)
-            fileUpload.size=uploaded_file.size
-            fileUpload.title=file.name
-        else: 
-            cls.errors=[{"message":"file does not exist"}]
-            return cls
-        
-        if fileUpload:
-            fileUpload.save()
-            cls.success=True
-            cls.errors=None
-            cls.fileUpload=fileUpload
-            return cls
-        cls.errors=[{"message":"file does not save"}]
-        return cls
-    
+   
 #MutationFunction
 #user
 class ChangeFirtName(MutationMixin, DynamicArgsMixin, ChangeFirtNameAction, graphene.Mutation):
@@ -788,10 +747,6 @@ class Add_item_disLike(MutationMixin, DynamicArgsMixin, add_item_disLikeAction, 
     __doc__ = add_item_disLikeAction.__doc__
     _required_args = ["item"]
 
-#file
-class UploadFile_mutation(MutationMixin, DynamicArgsMixin, UploadFileAction, graphene.Mutation):
-    __doc__ = UploadFileAction.__doc__
-    _required_args = ["file","fileType"]
 
 #Query
 class Query(graphene.ObjectType):
@@ -900,7 +855,6 @@ class Mutation(graphene.ObjectType):
     orderCart=Ordercart.Field()
     cancelCart=Cancelcart.Field()
 
-    uploadFile=UploadFile_mutation.Field()
     
 schema = graphene.Schema(query=Query)
 
