@@ -1,7 +1,6 @@
 from graphql_auth.bases import Output,MutationMixin,DynamicArgsMixin,graphene
 from graphql_relay import from_global_id
 from graphene_django import DjangoObjectType,filter
-from django.core.files.base import ContentFile,File
 
 from app_grapql.models import *
 
@@ -600,7 +599,6 @@ class cancel_cartAction(Output):
             return cls
         return cls
 
-
 class add_item_LikeAction(Output):
     
     """
@@ -688,8 +686,632 @@ class add_item_disLikeAction(Output):
             cls.errors=[{"message":"buyer does not exist"}]
             return cls   
         return cls
+#changeLayout
+class ChangeLayoutShowAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout=graphene.String(required=True)
+        show=graphene.String(required=True)
 
-   
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            show=kwargs.get("show")
+            layout=kwargs.get("layout")
+            if show and layout:
+                _, model_item_id = from_global_id(layout)
+                _layout=Layout.objects.get(id=model_item_id)
+                if _layout:
+                    if show=='True':
+                        _layout.show=True
+                    else:
+                        _layout.show=False
+                    _layout.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class ChangeLayoutActiveAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout=graphene.String(required=True)
+        active=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            active=kwargs.get("active")
+            layout=kwargs.get("layout")
+            if active and layout:
+                _, model_item_id = from_global_id(layout)
+                _layout=Layout.objects.get(id=model_item_id)
+                if _layout:
+                    if active=='True':
+                        _layout.active=True
+                    else:    
+                        _layout.active=False
+                    _layout.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class ChangeLayoutCatergoryAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout=graphene.String(required=True)
+        catergory=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            catergory=kwargs.get("catergory")
+            layout=kwargs.get("layout")
+            if catergory and layout:
+                _, model_lid = from_global_id(layout)
+                _, model_cid = from_global_id(catergory)
+                _l=Layout.objects.get(id=model_lid)
+                _c=Layout_catergory.objects.get(id=model_cid)
+                if _l and _c:
+                    _l.catergory=_c
+                    _l.save()
+                    _lcs=Layout.objects.filter(parent=_l.name)
+                    if _lcs:
+                        for _lc in _lcs:
+                            _lc.catergory=_c
+                            _lc.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class ChangeLayoutNameAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        name    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            name=kwargs.get("name")
+            layout=kwargs.get("layout")
+            if name and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _lcs=Layout.objects.filter(parent=_l.name)
+                    _l.name=name
+                    _l.save()
+                    if _lcs:
+                        for _lc in _lcs:
+                            _lc.parent=name
+                            _lc.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutTitleAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        title    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            title=kwargs.get("title")
+            layout=kwargs.get("layout")
+            if title and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.title=title
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutTitleStypeAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        titlestype    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            titlestype=kwargs.get("titlestype")
+            layout=kwargs.get("layout")
+            if titlestype and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.title_stype=titlestype
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutPageAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        page    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            page=kwargs.get("page")
+            layout=kwargs.get("layout")
+            if page and layout:
+                _, model_lid = from_global_id(layout)
+                _layout=Layout.objects.get(id=model_lid)
+                if _layout:
+                    _l,_=Page_layout.objects.get_or_create(layout=_layout)
+                    _p=None
+                    if page!="Nan":
+                        _, model_pid = from_global_id(page)
+                        _p=Page.objects.get(id=model_pid)
+                    _l.page=_p
+                    _l.save()
+                    _lcs=Layout.objects.filter(parent=_l.layout.name)
+                    if _lcs:
+                        for _lc in _lcs:
+                            _lp,_=Page_layout.objects.get_or_create(layout=_lc)
+                            _lp.page=_p
+                            _lp.save()
+                    return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutItemAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        item    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            item=kwargs.get("item")
+            layout=kwargs.get("layout")
+            if item and layout:
+                _, model_lid = from_global_id(layout)
+                _layout=Layout.objects.get(id=model_lid)
+                if _layout:
+                    _l,_=Item_layout.objects.get_or_create(layout=_layout)
+                    _i=None
+                    if item!="Nan":
+                        _, model_pid = from_global_id(item)
+                        _i=Items_seller.objects.get(id=model_pid)
+                    _l.items_seller=_i
+                    _l.save()
+                    _lcs=Layout.objects.filter(parent=_l.layout.name)
+                    if _lcs:
+                        for _lc in _lcs:
+                            _lp,_=Item_layout.objects.get_or_create(layout=_lc)
+                            _lp.items_seller=_i
+                            _lp.save()
+                    return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutPriorityAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        priority=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            priority=kwargs.get("priority")
+            layout=kwargs.get("layout")
+            if priority and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.priority=priority
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutIntervalAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        interval=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            interval=kwargs.get("interval")
+            layout=kwargs.get("layout")
+            if interval and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.interval=interval
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutStyteAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        styte=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            styte=kwargs.get("styte")
+            layout=kwargs.get("layout")
+            if styte and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.styte=styte
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutDestAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        dest=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            dest=kwargs.get("dest")
+            layout=kwargs.get("layout")
+            if dest and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.dest=dest
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutDestStyleAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        deststyle=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            deststyle=kwargs.get("deststyle")
+            layout=kwargs.get("layout")
+            if deststyle and layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.dest_style=deststyle
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class ChangeLayoutImgAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
+        img     =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            img=kwargs.get("img")
+            layout=kwargs.get("layout")
+            if layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    if img=="Nan":_l.background=None
+                    else:_l.background=img
+                    _l.save()
+                    return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+#changeLayoutItem
+class ChangeLayoutItemShowAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem=graphene.String(required=True)
+        show=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            show=kwargs.get("show")
+            layoutItem=kwargs.get("layoutItem")
+            if show and layoutItem:
+                _, model_item_id = from_global_id(layoutItem)
+                _layout=Layout_img.objects.get(id=model_item_id)
+                if _layout:
+                    if show=='True':
+                        _layout.show=True
+                    else:
+                        _layout.show=False
+                    _layout.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class ChangeLayoutItemActiveAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem=graphene.String(required=True)
+        active=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            active=kwargs.get("active")
+            layoutItem=kwargs.get("layoutItem")
+            if active and layoutItem:
+                _, model_item_id = from_global_id(layoutItem)
+                _layout=Layout_img.objects.get(id=model_item_id)
+                if _layout:
+                    if active=='True':
+                        _layout.active=True
+                    else:    
+                        _layout.active=False
+                    _layout.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class ChangeLayoutItemNameAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        name    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            name=kwargs.get("name")
+            layoutItem=kwargs.get("layoutItem")
+            if name and layoutItem:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _lcs=Layout.objects.filter(parent=_l.name)
+                    _l.name=name
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutItemTitleAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        title    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            title=kwargs.get("title")
+            layoutItem=kwargs.get("layoutItem")
+            if title and layoutItem:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.title=title
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutItemTitleStypeAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        titlestype    =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            titlestype=kwargs.get("titlestype")
+            layoutItem=kwargs.get("layoutItem")
+            if titlestype and layoutItem:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.title_stype=titlestype
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+  
+class ChangeLayoutItemPriorityAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        priority=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            priority=kwargs.get("priority")
+            layoutItem=kwargs.get("layoutItem")
+            if priority and layoutItem:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.priority=priority
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+        
+class ChangeLayoutItemStyteAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        styte=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            styte=kwargs.get("styte")
+            layoutItem=kwargs.get("layoutItem")
+            if styte and layoutItem:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.styte=styte
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutItemDestAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        dest=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            dest=kwargs.get("dest")
+            layoutItem=kwargs.get("layoutItem")
+            if dest and layoutItem:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.dest=dest
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class ChangeLayoutItemDestStyleAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        deststyle=graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            deststyle=kwargs.get("deststyle")
+            layoutItem=kwargs.get("layoutItem")
+            if deststyle and layoutItem:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.dest_style=deststyle
+                    _l.save()
+                return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class ChangeLayoutItemImgAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+        img     =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            img=kwargs.get("img")
+            layoutItem=kwargs.get("layoutItem")
+            if layoutItem and img:
+                _, model_lid = from_global_id(layoutItem)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.avatar=img
+                    _l.save()
+                    return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
 #MutationFunction
 #user
 class ChangeFirtName(MutationMixin, DynamicArgsMixin, ChangeFirtNameAction, graphene.Mutation):
@@ -746,55 +1368,152 @@ class Add_item_Like(MutationMixin, DynamicArgsMixin, add_item_LikeAction, graphe
 class Add_item_disLike(MutationMixin, DynamicArgsMixin, add_item_disLikeAction, graphene.Mutation):
     __doc__ = add_item_disLikeAction.__doc__
     _required_args = ["item"]
+#layout
+class ChangeLayoutShow(MutationMixin, DynamicArgsMixin, ChangeLayoutShowAction, graphene.Mutation):
+    __doc__ = ChangeLayoutShowAction.__doc__
+    _required_args = ["layout","show"]
+
+class ChangeLayoutActive(MutationMixin, DynamicArgsMixin, ChangeLayoutActiveAction, graphene.Mutation):
+    __doc__ = ChangeLayoutActiveAction.__doc__
+    _required_args = ["layout","active"]
+
+class ChangeLayoutCatergory(MutationMixin, DynamicArgsMixin, ChangeLayoutCatergoryAction, graphene.Mutation):
+    __doc__ = ChangeLayoutCatergoryAction.__doc__
+    _required_args = ["layout","catergory"]
+
+class ChangeLayoutName(MutationMixin, DynamicArgsMixin, ChangeLayoutNameAction, graphene.Mutation):
+    __doc__ = ChangeLayoutCatergoryAction.__doc__
+    _required_args = ["layout","name"]
+
+class ChangeLayoutTitle(MutationMixin, DynamicArgsMixin, ChangeLayoutTitleAction, graphene.Mutation):
+    __doc__ = ChangeLayoutTitleAction.__doc__
+    _required_args = ["layout","title"]
+
+class ChangeLayoutTitleStype(MutationMixin, DynamicArgsMixin, ChangeLayoutTitleStypeAction, graphene.Mutation):
+    __doc__ = ChangeLayoutTitleStypeAction.__doc__
+    _required_args = ["layout","titlestype"]
+
+class ChangeLayoutPage(MutationMixin, DynamicArgsMixin, ChangeLayoutPageAction, graphene.Mutation):
+    __doc__ = ChangeLayoutPageAction.__doc__
+    _required_args = ["layout","page"]
+
+class ChangeLayoutItem(MutationMixin, DynamicArgsMixin, ChangeLayoutItemAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemAction.__doc__
+    _required_args = ["layout","item"]
+
+class ChangeLayoutPriority(MutationMixin, DynamicArgsMixin, ChangeLayoutPriorityAction, graphene.Mutation):
+    __doc__ = ChangeLayoutPriorityAction.__doc__
+    _required_args = ["layout","priority"]
+
+class ChangeLayoutInterval(MutationMixin, DynamicArgsMixin, ChangeLayoutIntervalAction, graphene.Mutation):
+    __doc__ = ChangeLayoutIntervalAction.__doc__
+    _required_args = ["layout","interval"]
+
+class ChangeLayoutStyte(MutationMixin, DynamicArgsMixin, ChangeLayoutStyteAction, graphene.Mutation):
+    __doc__ = ChangeLayoutStyteAction.__doc__
+    _required_args = ["layout","styte"]
+
+class ChangeLayoutDest(MutationMixin, DynamicArgsMixin, ChangeLayoutDestAction, graphene.Mutation):
+    __doc__ = ChangeLayoutDestAction.__doc__
+    _required_args = ["layout","dest"]
+
+class ChangeLayoutDestStyle(MutationMixin, DynamicArgsMixin, ChangeLayoutDestStyleAction, graphene.Mutation):
+    __doc__ = ChangeLayoutDestStyleAction.__doc__
+    _required_args = ["layout","deststyle"]
+
+class ChangeLayoutImg(MutationMixin, DynamicArgsMixin, ChangeLayoutImgAction, graphene.Mutation):
+    __doc__ = ChangeLayoutImgAction.__doc__
+    _required_args = ["layout","img"]
+#layoutitem
+class ChangeLayoutItemShow(MutationMixin, DynamicArgsMixin, ChangeLayoutItemShowAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemShowAction.__doc__
+    _required_args = ["layoutItem","show"]
+
+class ChangeLayoutItemActive(MutationMixin, DynamicArgsMixin, ChangeLayoutItemActiveAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemActiveAction.__doc__
+    _required_args = ["layoutItem","active"]
+
+class ChangeLayoutItemName(MutationMixin, DynamicArgsMixin, ChangeLayoutItemNameAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemNameAction.__doc__
+    _required_args = ["layoutItem","name"]
+
+class ChangeLayoutItemTitle(MutationMixin, DynamicArgsMixin, ChangeLayoutItemTitleAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemTitleAction.__doc__
+    _required_args = ["layoutItem","title"]
+
+class ChangeLayoutItemTitleStype(MutationMixin, DynamicArgsMixin, ChangeLayoutItemTitleStypeAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemTitleStypeAction.__doc__
+    _required_args = ["layoutItem","titlestype"]
+
+class ChangeLayoutItemPriority(MutationMixin, DynamicArgsMixin, ChangeLayoutItemPriorityAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemPriorityAction.__doc__
+    _required_args = ["layoutItem","priority"]
+
+class ChangeLayoutItemStyte(MutationMixin, DynamicArgsMixin, ChangeLayoutItemStyteAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemStyteAction.__doc__
+    _required_args = ["layoutItem","styte"]
+
+class ChangeLayoutItemDest(MutationMixin, DynamicArgsMixin, ChangeLayoutItemDestAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemDestAction.__doc__
+    _required_args = ["layoutItem","dest"]
+
+class ChangeLayoutItemDestStyle(MutationMixin, DynamicArgsMixin, ChangeLayoutItemDestStyleAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemDestStyleAction.__doc__
+    _required_args = ["layoutItem","deststyle"]
+
+class ChangeLayoutItemImg(MutationMixin, DynamicArgsMixin, ChangeLayoutItemImgAction, graphene.Mutation):
+    __doc__ = ChangeLayoutItemImgAction.__doc__
+    _required_args = ["layoutItem","img"]
 
 
 #Query
 class Query(graphene.ObjectType):
-    all_page = filter.DjangoFilterConnectionField(PageType)
-    page = graphene.relay.Node.Field(PageType)
-    item=graphene.relay.Node.Field(ItemType)
-    items_seller=graphene.relay.Node.Field(Items_sellerType)
-    all_Page_layoutType = filter.DjangoFilterConnectionField(Page_layoutType)
-    page_layoutType = graphene.relay.Node.Field(Page_layoutType)
-    all_Layout_catergory = filter.DjangoFilterConnectionField(Layout_catergoryType)
-    layout_catergory = graphene.relay.Node.Field(Layout_catergoryType)
-    all_menu = filter.DjangoFilterConnectionField(MenuType)
-    menu = graphene.relay.Node.Field(MenuType)
-    all_layout=filter.DjangoFilterConnectionField(LayoutType)
-    layout=graphene.relay.Node.Field(LayoutType)
-    all_Catergory=filter.DjangoFilterConnectionField(CatergoryType)
-    catergory=graphene.relay.Node.Field(CatergoryType)
-    all_Invoice=filter.DjangoFilterConnectionField(InvoiceType)
-    invoice=graphene.relay.Node.Field(InvoiceType)
-    all_Item_layoutType=filter.DjangoFilterConnectionField(Item_layoutType)
-    invoice_info=graphene.relay.Node.Field(InvoiceInfoType)
-    all_invoiceinfo=filter.DjangoFilterConnectionField(InvoiceInfoType)
-    item_layoutType=graphene.relay.Node.Field(Item_layoutType)
-    all_Invoice_item=filter.DjangoFilterConnectionField(LayoutType)
-    invoice_item=graphene.relay.Node.Field(Invoice_itemType)
-    all_Group_join=filter.DjangoFilterConnectionField(Group_joinType)
-    group_join=graphene.relay.Node.Field(Group_joinType)
-    all_Group_User_join=filter.DjangoFilterConnectionField(Group_user_joinType)
-    group_user_join=graphene.relay.Node.Field(Group_user_joinType)
-    all_Chat=filter.DjangoFilterConnectionField(ChatType)
-    chat=graphene.relay.Node.Field(ChatType)
-    allBuyer=filter.DjangoFilterConnectionField(BuyerType)
-    buyer=graphene.relay.Node.Field(BuyerType)
-    allSeller=filter.DjangoFilterConnectionField(SellerType)
-    seller=graphene.relay.Node.Field(SellerType)
-    allSupplier=filter.DjangoFilterConnectionField(SupplierType)
-    supplier=graphene.relay.Node.Field(SupplierType)
-    allPaner=filter.DjangoFilterConnectionField(PanerType)
-    paner=graphene.relay.Node.Field(PanerType)
-    allLikeItemSeller=filter.DjangoFilterConnectionField(LikeItemSellerType)
-    likeItemSeller=graphene.relay.Node.Field(LikeItemSellerType)
+    #model
+    all_page                =filter.DjangoFilterConnectionField(PageType)
+    page                    =graphene.relay.Node.Field(PageType)
+    item                    =graphene.relay.Node.Field(ItemType)
+    items_seller            =graphene.relay.Node.Field(Items_sellerType)
+    all_Page_layoutType     =filter.DjangoFilterConnectionField(Page_layoutType)
+    page_layoutType         =graphene.relay.Node.Field(Page_layoutType)
+    all_Layout_catergory    =filter.DjangoFilterConnectionField(Layout_catergoryType)
+    layout_catergory        =graphene.relay.Node.Field(Layout_catergoryType)
+    all_menu                =filter.DjangoFilterConnectionField(MenuType)
+    menu                    =graphene.relay.Node.Field(MenuType)
+    all_layout              =filter.DjangoFilterConnectionField(LayoutType)
+    layout                  =graphene.relay.Node.Field(LayoutType)
+    all_Catergory           =filter.DjangoFilterConnectionField(CatergoryType)
+    catergory               =graphene.relay.Node.Field(CatergoryType)
+    all_Invoice             =filter.DjangoFilterConnectionField(InvoiceType)
+    invoice                 =graphene.relay.Node.Field(InvoiceType)
+    all_Item_layoutType     =filter.DjangoFilterConnectionField(Item_layoutType)
+    invoice_info            =graphene.relay.Node.Field(InvoiceInfoType)
+    all_invoiceinfo         =filter.DjangoFilterConnectionField(InvoiceInfoType)
+    item_layoutType         =graphene.relay.Node.Field(Item_layoutType)
+    all_Invoice_item        =filter.DjangoFilterConnectionField(LayoutType)
+    invoice_item            =graphene.relay.Node.Field(Invoice_itemType)
+    all_Group_join          =filter.DjangoFilterConnectionField(Group_joinType)
+    group_join              =graphene.relay.Node.Field(Group_joinType)
+    all_Group_User_join     =filter.DjangoFilterConnectionField(Group_user_joinType)
+    group_user_join         =graphene.relay.Node.Field(Group_user_joinType)
+    all_Chat                =filter.DjangoFilterConnectionField(ChatType)
+    chat                    =graphene.relay.Node.Field(ChatType)
+    allBuyer                =filter.DjangoFilterConnectionField(BuyerType)
+    buyer                   =graphene.relay.Node.Field(BuyerType)
+    allSeller               =filter.DjangoFilterConnectionField(SellerType)
+    seller                  =graphene.relay.Node.Field(SellerType)
+    allSupplier             =filter.DjangoFilterConnectionField(SupplierType)
+    supplier                =graphene.relay.Node.Field(SupplierType)
+    allPaner                =filter.DjangoFilterConnectionField(PanerType)
+    paner                   =graphene.relay.Node.Field(PanerType)
+    allLikeItemSeller       =filter.DjangoFilterConnectionField(LikeItemSellerType)
+    likeItemSeller          =graphene.relay.Node.Field(LikeItemSellerType)
     
-    
-    filterItemSeller=graphene.List(Items_sellerType,title=graphene.String(required=True),stastus=graphene.String(required=True))
-    filterItemSellerCt=graphene.List(Items_sellerType,catergory=graphene.String(required=True),stastus=graphene.String(required=True),number=graphene.String(required=True),page=graphene.String(required=True))
-    all_ItemSeller_order=filter.DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
-    all_Items_seller=filter.DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
-    page_by_name = graphene.Field(PageType, name=graphene.String(required=True))
+    #custom
+    filterItemSeller        =graphene.List(Items_sellerType,title=graphene.String(required=True),stastus=graphene.String(required=True))
+    filterItemSellerCt      =graphene.List(Items_sellerType,catergory=graphene.String(required=True),stastus=graphene.String(required=True),number=graphene.String(required=True),page=graphene.String(required=True))
+    all_ItemSeller_order    =filter.DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
+    all_Items_seller        =filter.DjangoFilterConnectionField(Items_sellerType,order_by_fields=graphene.String())
+    page_by_name            =graphene.Field(PageType, name=graphene.String(required=True))
 
     count_Items_seller = graphene.Int()
     count_Items_seller_catergory = graphene.Int(catergory=graphene.String(required=True),stastus=graphene.String(required=True))
@@ -840,6 +1559,7 @@ class Query(graphene.ObjectType):
         
 #Mutation
 class Mutation(graphene.ObjectType):
+    #user
     changeFirtName=ChangeFirtName.Field()
     changeLastName=ChangeLastName.Field()
     changeAddress=ChangeAddressName.Field()
@@ -847,6 +1567,7 @@ class Mutation(graphene.ObjectType):
     creatRom=CreatRom.Field()
     joinRom=JoinRom.Field()
     chat=ChatRom.Field()
+    #cart
     get_or_createInvoice=Get_or_createInvoice.Field()
     add_item_invoice=Add_item_cart.Field()
     likeItem=Add_item_Like.Field()
@@ -854,31 +1575,32 @@ class Mutation(graphene.ObjectType):
     removeItemCart=Remove_item_cart.Field()
     orderCart=Ordercart.Field()
     cancelCart=Cancelcart.Field()
-
+    #layout
+    changeLayoutShow=ChangeLayoutShow.Field()
+    changeLayoutActive=ChangeLayoutActive.Field()
+    changeLayoutCatergory=ChangeLayoutCatergory.Field()
+    changeLayoutName=ChangeLayoutName.Field()
+    changeLayoutTitle=ChangeLayoutTitle.Field()
+    changeLayoutTitleStype=ChangeLayoutTitleStype.Field()
+    changeLayoutPage=ChangeLayoutPage.Field()
+    changeLayoutPriority=ChangeLayoutPriority.Field()
+    changeLayoutInterval=ChangeLayoutInterval.Field()
+    changeLayoutStyte=ChangeLayoutStyte.Field()
+    changeLayoutItem=ChangeLayoutItem.Field()
+    changeLayoutDest=ChangeLayoutDest.Field()
+    changeLayoutDestStyle=ChangeLayoutDestStyle.Field()
+    changeLayoutImg=ChangeLayoutImg.Field()
+    #layoutItem
+    changeLayoutItemShow=ChangeLayoutItemShow.Field()
+    changeLayoutItemActive=ChangeLayoutItemActive.Field()
+    changeLayoutItemName=ChangeLayoutItemName.Field()
+    changeLayoutItemTitle=ChangeLayoutItemTitle.Field()
+    changeLayoutItemTitleStype=ChangeLayoutItemTitleStype.Field()
+    changeLayoutItemPriority=ChangeLayoutItemPriority.Field()
+    changeLayoutItemStyte=ChangeLayoutItemStyte.Field()
+    changeLayoutItemDest=ChangeLayoutItemDest.Field()
+    changeLayoutItemDestStyle=ChangeLayoutItemDestStyle.Field()
+    changeLayoutItemImg=ChangeLayoutItemImg.Field()
     
 schema = graphene.Schema(query=Query)
 
-
-'''tham khảo
-#from django.core.files.storage import FileSystemStorage
-class UploadFileAction(Output):
-    file_url = graphene.String()
-    class Arguments:
-        file = Upload(required=True)
-    
-    def resolve_mutation(cls, root, info, **kwargs):
-        cls(success=False,errors=[{"message":"file does not exist"}])
-        # Xử lý tệp tin ở đây
-        file=kwargs.get("file")
-        content_file = ContentFile(file.read())
-        uploaded_file = UploadedFile(file=content_file, name=file.name)
-        
-        # Lưu trữ uploaded_file vào thư mục media/upload
-        fs = FileSystemStorage(location='app_grapql/static/upload/fileupload/%Y/%m')
-        #if uploaded_file.size>1024*1024*10:
-        filename = fs.save(uploaded_file.name, uploaded_file)
-        file_url = fs.url(filename)
-        if file_url:
-            cls(success=True,errors=None)
-        return UploadFileAction(file_url,cls)
-'''

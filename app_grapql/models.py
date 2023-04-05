@@ -1,7 +1,6 @@
 #from django.core.validators import *
 from django.db import models
 import json
-from ckeditor.fields import RichTextField
 from django.core.exceptions import ValidationError
 from django.contrib.auth.models import AbstractUser
 from django.contrib.admin.models import LogEntryManager
@@ -199,13 +198,13 @@ class Layout(Content):
 class Layout_img(Content):
     layout=models.ForeignKey(Layout,on_delete=models.CASCADE)
     avatar=models.ImageField(upload_to='static/upload/Layout_img/%Y/%m')
-    dest=RichTextField(null=True)
+    dest=models.TextField(null=True,blank=True)
     priority=models.IntegerField(null=True,blank=True,unique=False)
     dest_style=models.CharField(max_length=250,null=True,blank=True)
     style=models.CharField(max_length=250,null=True,blank=True)
 
 class Page_layout(models.Model):
-    page=models.ForeignKey(Page,on_delete=models.SET_NULL,null=True,blank=False)
+    page=models.ForeignKey(Page,on_delete=models.CASCADE,null=True,blank=False)
     layout=models.ForeignKey(Layout,on_delete=models.CASCADE,null=False,blank=False)
     def __str__(self) :
         return str(self.id) +" : "+ self.page.title+" : "+ self.layout.title
@@ -217,7 +216,7 @@ class Item(Content):
     price=models.FloatField(max_length=255,null=False,blank=False)
     price_promotion=models.FloatField(max_length=255,null=False,blank=False,default=price)
     number=models.CharField(max_length=50,null=False,blank=False,default=0)
-    dest=RichTextField(null=True)
+    dest=models.TextField(null=True)
     dest_style=models.CharField(max_length=250,null=True,blank=True)
     supplier=models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True)
     stastus=models.CharField(max_length=250,choices=Status_item,null=True,blank=True)
@@ -239,10 +238,10 @@ class Items_seller(models.Model):
         return str(self.id) +" : "+ self.item.title+" : "+ str(self.number)+" : "+ str(self.stastus)
 
 class Item_layout(models.Model):
-    items_seller=models.ForeignKey(Items_seller,on_delete=models.SET_NULL,null=True,blank=True)
+    items_seller=models.ForeignKey(Items_seller,on_delete=models.CASCADE,null=True,blank=True)
     layout=models.ForeignKey(Layout,on_delete=models.CASCADE,null=False,blank=False)
     def __str__(self) :
-        return str(self.id) +" : "+ self.items_seller.item.title+" : "+self.items_seller.seller.get_username() +" : "+self.layout.title
+        return str(self.id) +" : "+self.layout.title
     
 class Catergory(Content):
     parent=models.CharField(max_length=250,null=True,blank=True,default='0')

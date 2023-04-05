@@ -6,9 +6,9 @@ from graphql_auth.models import UserStatus
 from graphql_auth.utils import get_token_paylod
 from graphql_auth.settings import graphql_auth_settings as app_settings
 from graphql_auth.constants import TokenAction
-from django.core.files.base import ContentFile,File
+from django.core.files.base import ContentFile
 from django.core.files.uploadedfile import UploadedFile
-from django.http import HttpResponse,JsonResponse
+from django.http import JsonResponse
 from .models import User,HistoryFileUp
 import os
 #from graphql_jwt.shortcuts import get_token
@@ -51,13 +51,15 @@ def resetPass(request,token):
 def uploadFile(request):
     if request.method == 'POST':
         file = request.FILES['file']
+        
         _file=file.read()
         content_file = ContentFile(_file)
         _filename=request.POST['filename']
         _typefile=request.POST['filetype']
-        
+        _user=request.POST['user']
+        u=str(_user).strip()
         if content_file:
-            user=User.objects.get(username=request.POST['user'])
+            user=User.objects.get(username=u)
             if user:
                 _size=len(content_file)
                 _files_old=HistoryFileUp.objects.filter(size=_size)
