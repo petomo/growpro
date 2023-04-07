@@ -1,7 +1,6 @@
 from graphql_auth.bases import Output,MutationMixin,DynamicArgsMixin,graphene
 from graphql_relay import from_global_id
 from graphene_django import DjangoObjectType,filter
-
 from app_grapql.models import *
 
 #Types
@@ -1063,7 +1062,160 @@ class ChangeLayoutImgAction(Output):
                     return cls(success=True,errors=None)
             return cls(success=False,errors=[{"message":"attributes do not exist"}])
         return cls(success=False,errors=[{"message":"User does not exist"}])
+    
+class LayoutDeleteAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layout  =graphene.String(required=True)
 
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            layout=kwargs.get("layout")
+            if layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout.objects.get(id=model_lid)
+                if _l:
+                    _l.delete()
+                    return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class AddLayoutAction(Output):
+    """
+    
+    """
+    class Arguments:
+        title       =graphene.String(required=True)
+        title_stype =graphene.String(required=True)
+        show        =graphene.String(required=True)
+        active      =graphene.String(required=True)
+        name        =graphene.String(required=True)
+        name_styte  =graphene.String(required=True)
+        priority    =graphene.String(required=True)
+        dest        =graphene.String(required=True)
+        dest_style  =graphene.String(required=True)
+        styte       =graphene.String(required=True)
+        parent      =graphene.String(required=True)
+        catergory   =graphene.String(required=True)
+        background  =graphene.String(required=True)
+        interval    =graphene.String(required=True)
+        page        =graphene.String(required=True)
+        itemseller  =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            _show       =False
+            _active     =False
+            _background =None
+            _page       =None
+            _itsl       =None
+            lp          =None
+            title       =kwargs.get("title")
+            title_stype =kwargs.get("title_stype")
+            show        =kwargs.get("show")
+            active      =kwargs.get("active")
+            name        =kwargs.get("name")
+            name_styte  =kwargs.get("name_styte")
+            priority    =kwargs.get("priority")
+            dest        =kwargs.get("dest")
+            dest_style  =kwargs.get("dest_style")
+            styte       =kwargs.get("styte")
+            parent      =kwargs.get("parent")
+            catergory   =kwargs.get("catergory")
+            background  =kwargs.get("background")
+            interval    =kwargs.get("interval")
+            page        =kwargs.get("page")
+            itemseller  =kwargs.get("itemseller")
+            if not title        :return cls(success=False,errors=[{"message":"attribute title do not exist"}])
+            if not title_stype  :return cls(success=False,errors=[{"message":"attribute title_stype do not exist"}]) 
+            if not show         :return cls(success=False,errors=[{"message":"attribute show do not exist"}]) 
+            else: 
+                if show=="True":_show=True 
+            if not active       :return cls(success=False,errors=[{"message":"attribute active do not exist"}]) 
+            else:
+                if active=="True":_active=True
+            if not name         :return cls(success=False,errors=[{"message":"attribute name do not exist"}])
+            if not name_styte   :return cls(success=False,errors=[{"message":"attribute name_styte do not exist"}])
+            if not priority     :return cls(success=False,errors=[{"message":"attribute priority do not exist"}])
+            if not dest         :return cls(success=False,errors=[{"message":"attribute dest do not exist"}])    
+            if not dest_style   :return cls(success=False,errors=[{"message":"attribute dest_style do not exist"}])
+            if not styte        :return cls(success=False,errors=[{"message":"attribute styte do not exist"}])
+            if not parent       :return cls(success=False,errors=[{"message":"attribute parent do not exist"}])
+            else:
+                if parent=="0" or parent=="Nan":
+                    parent="0"
+                    if not page :return cls(success=False,errors=[{"message":"attribute page do not exist"}])
+                    else:
+                        if page=="Nan":
+                            _page=None
+                            if not itemseller:return cls(success=False,errors=[{"message":"attribute itemseller do not exist"}])
+                            else:
+                                if itemseller=="Nan":_itemseller=None
+                                else:
+                                    _, model_itslid = from_global_id(itemseller)
+                                    _itsl=Items_seller.objects.get(id=model_itslid)
+                                    if not _itsl:return cls(success=False,errors=[{"message":"Items_seller do not exist"}])
+                        else:
+                            _, model_pid = from_global_id(page)
+                            _page=Page.objects.get(id=model_pid)
+                            if not _page:return cls(success=False,errors=[{"message":"page do not exist"}])
+                else:
+                    loc=Layout.objects.get(name=parent)
+                    if loc:
+                        _lopc=Page_layout.objects.get(layout=loc)
+                        if _lopc:
+                            _page=_lopc.page
+                        else:
+                            _loic=Item_layout.objects.get(layout=loc)
+                            if _loic:
+                                _itsl=_loic.items_seller
+                    else:       return cls(success=False,errors=[{"message":"Layout parent do not exist"}])   
+
+            if not catergory    :return cls(success=False,errors=[{"message":"attribute catergory do not exist"}])
+            else:
+                _, model_lcid   = from_global_id(catergory)
+                _lc             =Layout_catergory.objects.get(id=model_lcid)
+                if not _lc:     return cls(success=False,errors=[{"message":"Layout_catergory do not exist"}]) 
+            if not background   :return cls(success=False,errors=[{"message":"attribute background do not exist"}])
+            else:
+                if background=="Nan":_background=None
+                else:_background=background
+            if not interval     :return cls(success=False,errors=[{"message":"attribute interval do not exist"}])    
+                       
+            l=Layout.objects.create(
+                title=title,
+                title_stype=title_stype,
+                show=_show,
+                active=_active,
+                name=name,
+                name_styte=name_styte,
+                priority=priority,
+                dest=dest,
+                dest_style=dest_style,
+                styte=styte,
+                parent=parent,
+                catergory=_lc,
+                background=_background,
+                interval=interval,
+                user=user
+                )
+            if l:  
+                if _page:
+                    lp=Page_layout.objects.create(page=_page,layout=l)
+                if lp:
+                    return cls(success=True,errors=None)
+                else:
+                    if _itsl:
+                        Item_layout.objects.create(items_seller=_itsl,layout=l)
+                return cls(success=True,errors=None)
+            else:return cls(success=False,errors=[{"message":"Layout do not create"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}]) 
 #changeLayoutItem
 class ChangeLayoutItemShowAction(Output):
     """
@@ -1311,6 +1463,112 @@ class ChangeLayoutItemImgAction(Output):
                     return cls(success=True,errors=None)
             return cls(success=False,errors=[{"message":"attributes do not exist"}])
         return cls(success=False,errors=[{"message":"User does not exist"}])
+   
+class LayoutItemDeleteAction(Output):
+    """
+    
+    """
+    class Arguments:
+        layoutItem  =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            layout=kwargs.get("layoutItem")
+            if layout:
+                _, model_lid = from_global_id(layout)
+                _l=Layout_img.objects.get(id=model_lid)
+                if _l:
+                    _l.delete()
+                    return cls(success=True,errors=None)
+            return cls(success=False,errors=[{"message":"attributes do not exist"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}])
+
+class AddLayoutItemAction(Output):
+    """
+    
+    """
+    class Arguments:
+        title       =graphene.String(required=True)
+        title_stype =graphene.String(required=True)
+        show        =graphene.String(required=True)
+        active      =graphene.String(required=True)
+        name        =graphene.String(required=True)
+        name_styte  =graphene.String(required=True)
+        priority    =graphene.String(required=True)
+        dest        =graphene.String(required=True)
+        dest_style  =graphene.String(required=True)
+        styte       =graphene.String(required=True)
+        layout      =graphene.String(required=True)
+        avatar      =graphene.String(required=True)
+
+    @classmethod
+    def resolve_mutation(cls, root, info, **kwargs):
+        user=info.context.user    
+        if user.is_authenticated:
+            _show       =False
+            _active     =False
+            _avatar     =None
+            _layout     =None
+            title       =kwargs.get("title")
+            title_stype =kwargs.get("title_stype")
+            show        =kwargs.get("show")
+            active      =kwargs.get("active")
+            name        =kwargs.get("name")
+            name_styte  =kwargs.get("name_styte")
+            priority    =kwargs.get("priority")
+            dest        =kwargs.get("dest")
+            dest_style  =kwargs.get("dest_style")
+            styte       =kwargs.get("styte")
+            layout      =kwargs.get("layout")
+            avatar      =kwargs.get("avatar")
+            if not title        :return cls(success=False,errors=[{"message":"attribute title do not exist"}])
+            if not title_stype  :return cls(success=False,errors=[{"message":"attribute title_stype do not exist"}]) 
+            if not show         :return cls(success=False,errors=[{"message":"attribute show do not exist"}]) 
+            else: 
+                if show=="True":_show=True 
+            if not active       :return cls(success=False,errors=[{"message":"attribute active do not exist"}]) 
+            else:
+                if active=="True":_active=True
+            if not name         :return cls(success=False,errors=[{"message":"attribute name do not exist"}])
+            if not name_styte   :return cls(success=False,errors=[{"message":"attribute name_styte do not exist"}])
+            if not priority     :return cls(success=False,errors=[{"message":"attribute priority do not exist"}])
+            if not dest         :return cls(success=False,errors=[{"message":"attribute dest do not exist"}])    
+            if not dest_style   :return cls(success=False,errors=[{"message":"attribute dest_style do not exist"}])
+            if not styte        :return cls(success=False,errors=[{"message":"attribute styte do not exist"}])
+            if not layout       :return cls(success=False,errors=[{"message":"attribute layout do not exist"}])
+            else:
+                _, model_lid = from_global_id(layout)
+                _layout=Layout.objects.get(id=model_lid)
+                if not _layout:     return cls(success=False,errors=[{"message":"Layoutdo not exist"}]) 
+            if not avatar   :return cls(success=False,errors=[{"message":"attribute background do not exist"}])
+            else:
+                if avatar=="Nan":_avatar=None
+                else:_avatar=avatar
+                        
+            l=Layout_img.objects.create(
+                title=title,
+                title_stype=title_stype,
+                show=_show,
+                active=_active,
+                name=name,
+                name_styte=name_styte,
+                priority=priority,
+                dest=dest,
+                dest_style=dest_style,
+                styte=styte,
+                layout=_layout,
+                avatar=_avatar
+                )
+            if l:
+                if l:
+                    return cls(success=True,errors=None)
+                else:
+                    return cls(success=False,errors=[{"message":"Layout_img do not create"}])
+            else:return cls(success=False,errors=[{"message":"Layout do not create"}])
+        return cls(success=False,errors=[{"message":"User does not exist"}]) 
+
 
 #MutationFunction
 #user
@@ -1424,6 +1682,14 @@ class ChangeLayoutDestStyle(MutationMixin, DynamicArgsMixin, ChangeLayoutDestSty
 class ChangeLayoutImg(MutationMixin, DynamicArgsMixin, ChangeLayoutImgAction, graphene.Mutation):
     __doc__ = ChangeLayoutImgAction.__doc__
     _required_args = ["layout","img"]
+
+class LayoutDelete(MutationMixin, DynamicArgsMixin, LayoutDeleteAction, graphene.Mutation):
+    __doc__ = LayoutDeleteAction.__doc__
+    _required_args = ["layout"]
+
+class AddLayout(MutationMixin, DynamicArgsMixin, AddLayoutAction, graphene.Mutation):
+    __doc__ = AddLayoutAction.__doc__
+    _required_args = ["title","title_stype","show","active","name","name_styte","priority","dest","dest_style","styte","parent","catergory","background","interval","page","itemseller"]
 #layoutitem
 class ChangeLayoutItemShow(MutationMixin, DynamicArgsMixin, ChangeLayoutItemShowAction, graphene.Mutation):
     __doc__ = ChangeLayoutItemShowAction.__doc__
@@ -1465,6 +1731,13 @@ class ChangeLayoutItemImg(MutationMixin, DynamicArgsMixin, ChangeLayoutItemImgAc
     __doc__ = ChangeLayoutItemImgAction.__doc__
     _required_args = ["layoutItem","img"]
 
+class LayoutItemDelete(MutationMixin, DynamicArgsMixin, LayoutItemDeleteAction, graphene.Mutation):
+    __doc__ = LayoutItemDeleteAction.__doc__
+    _required_args = ["layoutItem"]
+
+class AddLayoutItem(MutationMixin, DynamicArgsMixin, AddLayoutItemAction, graphene.Mutation):
+    __doc__ = AddLayoutItemAction.__doc__
+    _required_args = ["title","title_stype","show","active","name","name_styte","priority","dest","dest_style","styte","layout","avatar"]
 
 #Query
 class Query(graphene.ObjectType):
@@ -1590,6 +1863,8 @@ class Mutation(graphene.ObjectType):
     changeLayoutDest=ChangeLayoutDest.Field()
     changeLayoutDestStyle=ChangeLayoutDestStyle.Field()
     changeLayoutImg=ChangeLayoutImg.Field()
+    layoutDelete=LayoutDelete.Field()
+    addLayout=AddLayout.Field()
     #layoutItem
     changeLayoutItemShow=ChangeLayoutItemShow.Field()
     changeLayoutItemActive=ChangeLayoutItemActive.Field()
@@ -1601,6 +1876,8 @@ class Mutation(graphene.ObjectType):
     changeLayoutItemDest=ChangeLayoutItemDest.Field()
     changeLayoutItemDestStyle=ChangeLayoutItemDestStyle.Field()
     changeLayoutItemImg=ChangeLayoutItemImg.Field()
+    layoutItemDelete=LayoutItemDelete.Field()
+    addLayoutItem=AddLayoutItem.Field()
     
 schema = graphene.Schema(query=Query)
 
